@@ -1,8 +1,21 @@
-import jwt  from 'jsonwebtoken';
-import fs   from 'fs';
-import path from 'path';
+import jwt   from 'jsonwebtoken';
+import fs    from 'fs';
+import path  from 'path';
+import admin from 'firebase-admin';
 
 const JWT_SECRET = process.env.JWT_SECRET;
+
+// ── Firebase Admin init (o singură dată) ─────────────────────────────────────
+if (!admin.apps.length) {
+    admin.initializeApp({
+        credential: admin.credential.cert({
+            projectId:   process.env.FIREBASE_PROJECT_ID,
+            clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+            // Vercel stochează newline-urile ca \n literal în env vars
+            privateKey:  process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+        }),
+    });
+}
 
 function parseCookie(header, name) {
     if (!header) return null;
@@ -10,8 +23,7 @@ function parseCookie(header, name) {
     return match ? decodeURIComponent(match[1]) : null;
 }
 
-export default function handler(req, res) {
-
+export default async function handler(req, res) {
     // ── 1. Cookie prezent? ────────────────────────────────────────────────────
     const token = parseCookie(req.headers.cookie, 'ocs_admin');
     if (!token) {
@@ -36,9 +48,23 @@ export default function handler(req, res) {
         return res.redirect('/');
     }
 
-    // ── 4. Servim HTML-ul din _admin_template.html ────────────────────────────
-    // Fișierul e redenumit cu _ prefix și blocat prin vercel.json rewrites
-    // astfel nu e accesibil direct ca fișier static
+    // ── 4. Generează Firebase custom token ────────────────────────────────────
+    let firebaseToken = null;
+    try {
+        // uid-ul trebuie să fie string — folosim roblox ID sau roblox name
+        const uid = String(payload.id || payload.roblox);
+        firebaseToken = await admin.auth().createCustomToken(uid, {
+            isAdmin:       payload.isAdmin       || false,
+            isHighCommand: payload.isHighCommand || false,
+            isDeveloper:   payload.isDeveloper   || false,
+        });
+    } catch(err) {
+        // Nu blocăm pagina dacă Firebase Admin eșuează,
+        // dar logăm eroarea ca să o putem depana
+        console.error('[admin] Firebase custom token error:', err.message);
+    }
+
+    // ── 5. Servim HTML-ul ─────────────────────────────────────────────────────
     try {
         const htmlPath = path.join(process.cwd(), '_admin_template.html');
         const html     = fs.readFileSync(htmlPath, 'utf8');
@@ -50,7 +76,7 @@ export default function handler(req, res) {
             isAdmin:       payload.isAdmin       || false,
             isHighCommand: payload.isHighCommand || false,
             isDeveloper:   payload.isDeveloper   || false,
-            firebaseToken: payload.firebaseToken || null,
+            firebaseToken: firebaseToken,          // acum generat server-side
             exp:           payload.exp
         });
 
@@ -59,12 +85,11 @@ export default function handler(req, res) {
             `window.__SERVER_PAYLOAD__ = ${safePayload};`
         );
 
-        res.setHeader('Content-Type', 'text/html; charset=utf-8');
-        res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
-        res.setHeader('X-Frame-Options', 'DENY');
+        res.setHeader('Content-Type',           'text/html; charset=utf-8');
+        res.setHeader('Cache-Control',          'no-store, no-cache, must-revalidate, private');
+        res.setHeader('X-Frame-Options',        'DENY');
         res.setHeader('X-Content-Type-Options', 'nosniff');
         res.status(200).send(injected);
-
     } catch(e) {
         console.error('[admin] Failed to read _admin_template.html:', e);
         res.status(500).send('Internal Server Error');
