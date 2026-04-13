@@ -179,28 +179,30 @@
     ];
 
     async function boot() {
-        const p = window.__SERVER_PAYLOAD__ || {};
-        if (!p.isAdmin && !p.isHighCommand && !p.isDeveloper) {
-            showGateError('Unauthorized access. Access restricted to Command Staff.');
-            setTimeout(() => window.location.href = '/', 2000);
-            return;
-        }
-
-        appState.robloxName    = p.roblox;
-        appState.robloxId      = p.id;
-        appState.isAdmin       = p.isAdmin;
-        appState.isHighCommand = p.isHighCommand;
-        appState.isDeveloper   = p.isDeveloper;
-        appState.tokenExp      = p.exp;
-
-        if (p.firebaseToken && window.firebaseSignIn) {
-            try { await window.firebaseSignIn(window.firebaseAuth, p.firebaseToken); } catch(e) { console.warn('Firebase login skipped.'); }
-        }
-
-        await loadQuestionBankFromCloud();
-        startSessionTimer();
-        showAdminPanel();
+    const p = window.__SERVER_PAYLOAD__ || {};
+    if (!p.isAdmin && !p.isHighCommand && !p.isDeveloper) {
+        showGateError('Unauthorized access. Access restricted to Command Staff.');
+        setTimeout(() => window.location.href = '/', 2000);
+        return;
     }
+    appState.robloxName    = p.roblox;
+    appState.robloxId      = p.id;
+    appState.isAdmin       = p.isAdmin;
+    appState.isHighCommand = p.isHighCommand;
+    appState.isDeveloper   = p.isDeveloper;
+    appState.tokenExp      = p.exp;
+
+    if (p.firebaseToken && window.firebaseSignIn) {
+        try {
+            const userCredential = await window.firebaseSignIn(window.firebaseAuth, p.firebaseToken);
+            await userCredential.user.getIdToken(true);
+        } catch(e) { console.warn('Firebase login skipped.', e); }
+    }
+
+    await loadQuestionBankFromCloud();
+    startSessionTimer();
+    showAdminPanel();
+}
 
     function showGateError(msg) {
         const el = document.getElementById('auth-gate-msg');
