@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Military Police Admin Panel</title>
+    <title>MP | Command Center</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -12,7 +12,7 @@
     <script>/* __SERVER_PAYLOAD__ */</script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, doc, onSnapshot, getDoc, setDoc, updateDoc, collection, addDoc, query, orderBy, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, doc, onSnapshot, getDoc, setDoc, updateDoc, collection, addDoc, query, orderBy, getDocs, deleteDoc, where } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { getAuth, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
         const firebaseConfig = {
@@ -22,7 +22,7 @@
           storageBucket: "mp-website-4de23.firebasestorage.app",
           messagingSenderId: "985076640347",
           appId: "1:985076640347:web:9170a73ecb4aa8d656ad7e"
-};
+        };
 
         const app = initializeApp(firebaseConfig);
         const db  = getFirestore(app);
@@ -42,6 +42,7 @@
         window.firebaseOrderBy     = orderBy;
         window.firebaseGetDocs     = getDocs;
         window.firebaseDeleteDoc   = deleteDoc;
+        window.firebaseWhere       = where;
     </script>
 
     <script>
@@ -82,22 +83,23 @@
         .rubric-btn.selected-4 { background: rgba(59,130,246,0.15); border-color: #3b82f6; color: #93c5fd; box-shadow: 0 0 10px rgba(59,130,246,0.2); }
         .rubric-btn.selected-5 { background: rgba(168,85,247,0.15); border-color: #a855f7; color: #d8b4fe; box-shadow: 0 0 10px rgba(168,85,247,0.2); }
 
-        .q-inline-edit { border: none; background: transparent; outline: none; width: 100%; font-size: 0.875rem; color: #e4e4e7; resize: none; line-height: 1.5; }
-        .q-inline-edit:focus { background: #27272a; border-radius: 6px; padding: 4px 6px; box-shadow: 0 0 0 2px #3b82f6; }
-        .drag-handle { cursor: grab; color: #52525b; }
-        .drag-handle:active { cursor: grabbing; }
-        .q-row.dragging  { opacity: 0.4; }
-        .q-row.drag-over { border-top: 2px solid #3b82f6; }
-
-        /* Auth gate */
-        #auth-gate { position: fixed; inset: 0; background: #09090b; display: flex; align-items: center; justify-content: center; z-index: 9999; }
+        .drag-handle { cursor: grab; color: #52525b; padding: 4px; transition: color 0.2s; }
+        .drag-handle:active { cursor: grabbing; color: #3b82f6; }
+        
         #main-panel { display: none; }
         #main-panel.visible { display: flex; }
+        #auth-gate { position: fixed; inset: 0; background: #09090b; display: flex; align-items: center; justify-content: center; z-index: 9999; }
+        
+        .cat-group { transition: all 0.3s ease; }
+        .nav-item-active { background: #27272a; color: white; border-right: 3px solid #3b82f6; }
+
+        /* Dossier Animations */
+        @keyframes slideInRight { from { transform: translateX(20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        .animate-slide-in { animation: slideInRight 0.3s ease-out forwards; }
     </style>
 </head>
 <body class="min-h-screen">
 
-    <!-- ── AUTH GATE: afișat până JWT-ul e validat ─────────────────────────── -->
     <div id="auth-gate">
         <div class="text-center">
             <div class="w-16 h-16 border-4 border-zinc-700 border-t-blue-500 rounded-full animate-spin mx-auto mb-4"></div>
@@ -105,28 +107,26 @@
         </div>
     </div>
 
-    <!-- ── MAIN ADMIN PANEL ───────────────────────────────────────────────── -->
-    <div id="main-panel" class="fixed inset-0 flex flex-col font-sans" style="background:#09090b;">
-
+    <div id="main-panel" class="fixed inset-0 flex flex-col font-sans">
         <!-- Topbar -->
-        <div class="h-14 flex items-center justify-between px-6 bg-[#18181b] border-b border-[#27272a] flex-shrink-0">
+        <div class="h-14 flex items-center justify-between px-6 bg-[#18181b] border-b border-[#27272a] flex-shrink-0 z-50">
             <div class="flex items-center gap-4">
                 <div class="w-8 h-8 rounded bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
-                    <i class="fa-solid fa-layer-group text-white text-sm"></i>
+                    <i class="fa-solid fa-shield-halved text-white text-sm"></i>
                 </div>
                 <div>
-                    <h1 class="text-white font-bold text-sm tracking-wide">Command Center</h1>
-                    <p class="text-[#a1a1aa] text-[10px] uppercase tracking-widest">O.C.S. Secure Terminal</p>
+                    <h1 class="text-white font-bold text-sm tracking-wide">Military Police Command</h1>
+                    <p class="text-[#a1a1aa] text-[10px] uppercase tracking-widest">Command Center Terminal</p>
                 </div>
             </div>
             <div class="flex items-center gap-4">
                 <div class="hidden sm:flex items-center gap-2 px-3 py-1 rounded bg-[#09090b] border border-[#27272a]">
                     <div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-                    <span class="text-xs font-semibold text-emerald-400" id="cc-admin-badge">Interviewer</span>
+                    <span class="text-xs font-semibold text-emerald-400" id="cc-admin-badge">MPCPT</span>
                 </div>
                 <div class="flex items-center gap-2 px-3 py-1 rounded bg-[#09090b] border border-[#27272a]">
-                    <i class="fa-solid fa-shield-check text-blue-500 text-xs"></i>
-                    <span class="text-xs text-[#a1a1aa]" id="session-timer">2h</span>
+                    <i class="fa-solid fa-clock text-blue-500 text-xs"></i>
+                    <span class="text-xs text-[#a1a1aa]" id="session-timer">02:00:00</span>
                 </div>
                 <button onclick="secureLogout()" class="w-8 h-8 rounded flex items-center justify-center text-[#a1a1aa] hover:text-white hover:bg-[#27272a] transition-colors" title="Logout">
                     <i class="fa-solid fa-right-from-bracket text-sm"></i>
@@ -134,163 +134,71 @@
             </div>
         </div>
 
-        <!-- Body -->
+        <!-- Layout -->
         <div class="flex flex-1 min-h-0">
             <!-- Sidebar -->
-            <div class="w-16 sm:w-64 flex-shrink-0 flex flex-col border-r border-[#27272a] bg-[#18181b]/50">
-                <div id="cc-sidebar-nav" class="flex flex-col p-3 gap-1 overflow-y-auto admin-scroll h-full"></div>
+            <div class="w-16 sm:w-64 flex-shrink-0 flex flex-col border-r border-[#27272a] bg-[#18181b]/50 overflow-hidden">
+                <div id="cc-sidebar-nav" class="flex-1 flex flex-col p-3 gap-1 overflow-y-auto admin-scroll">
+                    <!-- Dinamic -->
+                </div>
             </div>
-            <!-- Content -->
-            <div id="admin-dynamic-content" class="flex-1 min-w-0 flex flex-col relative overflow-hidden bg-[#09090b]"></div>
+
+            <!-- Content Area -->
+            <div id="admin-dynamic-content" class="flex-1 min-w-0 flex flex-col relative overflow-hidden bg-[#09090b]">
+                <!-- Dinamic -->
+            </div>
         </div>
     </div>
 
-    <!-- Toast container -->
     <div id="toast-container"></div>
-
-    <!-- ── PDF TEMPLATE (ascuns) ──────────────────────────────────────────── -->
-    <!-- PDF TEMPLATE — dimensiuni fixe A4, margini corecte, text nu iese din pagină -->
-    <div id="pdf-export-template" class="hidden" style="
-        width: 794px;
-        background: white;
-        color: #111;
-        font-family: 'Inter', Arial, sans-serif;
-        font-size: 13px;
-        line-height: 1.6;
-        padding: 48px 56px;
-        box-sizing: border-box;
-    ">
-        <!-- HEADER -->
-        <div style="display:flex;justify-content:space-between;align-items:flex-end;border-bottom:3px solid #111;padding-bottom:14px;margin-bottom:24px;">
-            <div>
-                <div id="pdf-main-title" style="font-size:26px;font-weight:900;text-transform:uppercase;letter-spacing:-0.5px;line-height:1.1;">Official Record</div>
-                <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-top:4px;color:#555;">Officer Candidate School</div>
-            </div>
-            <div style="text-align:right;">
-                <div id="pdf-header-date" style="font-size:11px;font-weight:600;"></div>
-                <div style="font-size:10px;color:#666;margin-top:2px;">ID: <span id="pdf-header-id"></span></div>
-            </div>
-        </div>
-
-        <!-- EXAM SECTION -->
-        <div id="pdf-exam-wrapper" style="display:none;">
-            <!-- Info grid -->
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 24px;margin-bottom:20px;">
-                <div style="font-size:12px;"><span style="font-weight:700;">CANDIDATE:</span> <span id="pdf-candidate-name"></span></div>
-                <div style="font-size:12px;"><span style="font-weight:700;">DISCORD:</span> <span id="pdf-candidate-discord"></span></div>
-                <div style="font-size:12px;"><span style="font-weight:700;">EVALUATOR:</span> <span id="pdf-exam-evaluator"></span></div>
-                <div style="font-size:12px;"><span style="font-weight:700;">TIME TAKEN:</span> <span id="pdf-exam-time"></span></div>
-                <div style="font-size:12px;"><span style="font-weight:700;">SECURITY FLAGS:</span> <span id="pdf-exam-flags"></span></div>
-            </div>
-
-            <!-- Result box -->
-            <div id="pdf-result-box" style="border:2px solid #111;padding:16px;text-align:center;margin-bottom:24px;">
-                <div id="pdf-exam-status" style="font-size:28px;font-weight:900;text-transform:uppercase;letter-spacing:3px;"></div>
-                <div style="font-size:14px;font-weight:700;margin-top:4px;">FINAL SCORE: <span id="pdf-exam-score"></span></div>
-            </div>
-
-            <!-- Transcript -->
-            <div style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px;border-bottom:2px solid #111;padding-bottom:6px;margin-bottom:16px;">Exam Transcript</div>
-            <div id="pdf-qa-list"></div>
-        </div>
-
-        <!-- EVENT SECTION -->
-        <div id="pdf-event-wrapper">
-            <!-- Annex title (doar dacă e linked la exam) -->
-            <div id="pdf-event-annex-title" style="display:none;border-bottom:3px solid #111;padding-bottom:10px;margin-bottom:20px;margin-top:8px;">
-                <div style="font-size:20px;font-weight:900;text-transform:uppercase;letter-spacing:-0.5px;">Annex B: Event Details</div>
-                <div style="font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#555;margin-top:3px;">Operational Context</div>
-            </div>
-
-            <!-- Event params -->
-            <div style="margin-bottom:20px;">
-                <div style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid #111;padding-bottom:5px;margin-bottom:10px;">I. Event Parameters</div>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
-                    <div style="font-size:12px;"><span style="font-weight:700;">HOSTING OFFICER:</span> <span id="pdf-event-host"></span></div>
-                    <div style="font-size:12px;"><span style="font-weight:700;">EVENT TYPE:</span> <span id="pdf-event-type"></span></div>
-                </div>
-            </div>
-
-            <!-- Notes -->
-            <div style="margin-bottom:20px;">
-                <div style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid #111;padding-bottom:5px;margin-bottom:10px;">II. Official Notes & Attendees</div>
-                <div id="pdf-event-notes" style="font-size:12px;line-height:1.7;white-space:pre-wrap;word-break:break-word;"></div>
-            </div>
-
-            <!-- Proof -->
-            <div style="margin-bottom:20px;">
-                <div style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid #111;padding-bottom:5px;margin-bottom:10px;">III. Visual Proof</div>
-                <div id="pdf-event-link-text" style="font-size:10px;color:#2563eb;font-family:monospace;word-break:break-all;margin-bottom:8px;"></div>
-                <div style="border:1px solid #ccc;padding:4px;">
-                    <img id="pdf-event-image" src="" style="width:100%;max-height:360px;object-fit:contain;display:none;" alt="Event Proof">
-                </div>
-            </div>
-        </div>
-
-        <!-- FOOTER -->
-        <div style="margin-top:32px;padding-top:10px;border-top:1px solid #111;text-align:center;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#555;">
-            End of Official Document
-        </div>
-    </div>
 
     <script>
     // =========================================================================
-    // GLOBAL STATE
+    // STATE MANAGEMENT
     // =========================================================================
     let appState = {
         robloxName: null, robloxId: null,
-        isInstructor: false, isAdmin: false, isHighCommand: false, isDeveloper: false,
+        isAdmin: false, isHighCommand: false, isDeveloper: false,
         tokenExp: null
     };
 
     let QUESTION_BANK = [];
     let CATEGORIES    = [];
+    let adminSubmissions = [];
+    let currentDossier = null;
+    let adminCurrentView = 'evaluate_list';
+    
+    // Evaluation Logic
+    let evaluationScores = {};
+    let liveAvg = 0.0;
 
-    let expandedAdminSections = new Set();
-    let adminSubmissions      = [];
-    let currentDossier        = null;
-    let adminCurrentView      = 'evaluate_list';
-    let unsubscribeCCTV       = null;
+    const CC_NAV = [
+        { id: 'evaluate_list',     icon: 'fa-file-signature',      label: 'Pending Evals',    color: '#10b981', hcOnly: false, cat: 'Test Evaluations' },
+        { id: 'interview_history', icon: 'fa-clock-rotate-left',   label: 'History',          color: '#f43f5e', hcOnly: false, cat: 'Test Evaluations' },
+        { id: 'generate',          icon: 'fa-wand-magic-sparkles', label: 'Create Test',      color: '#f59e0b', hcOnly: false, cat: 'Test Evaluations' },
+        { id: 'backup_hub',        icon: 'fa-cloud-arrow-up',      label: 'Discord Backup',   color: '#8b5cf6', hcOnly: false, cat: 'Management' },
+        { id: 'db',                icon: 'fa-database',            label: 'Database',         color: '#3b82f6', hcOnly: false, cat: 'Logistics' },
+        { id: 'codes_history',     icon: 'fa-key',                 label: 'Access Codes',     color: '#06b6d4', hcOnly: false, cat: 'Logistics' },
+        { id: 'jrah',              icon: 'fa-pen-to-square',       label: 'Bank Editor',      color: '#a855f7', hcOnly: true,  cat: 'Logistics' },
+    ];
 
-    let allCodesData    = [];
-    let allHistoryData  = [];
-    let allEventLogs    = [];
-    let histCurrentFilter    = 'all';
-    let currentBackupFilter  = 'dossiers';
-    let backupDataDossiers   = [];
-    let backupDataEvents     = [];
-    let eventGradedCandidates = [];
-
-    let jrahDragSrcIndex = null;
-    let jrahDragSrcCat   = null;
-
-    // =========================================================================
-    // BOOT: payload injectat direct de server în api/admin.js
-    // Dacă __SERVER_PAYLOAD__ lipsește → pagina nu a fost servită prin /api/admin
-    // → cineva a accesat admin.html direct ca fișier static → redirect imediat
-    // =========================================================================
     async function boot() {
-        const p = window.__SERVER_PAYLOAD__;
-
-        if (!p || (!p.isAdmin && !p.isHighCommand && !p.isDeveloper && !p.isInstructor)) {
-            // Payload absent sau fără rang admin — access neautorizat
-            showGateError('Unauthorized. Redirecting...');
-            setTimeout(() => window.location.href = '/', 1500);
+        const p = window.__SERVER_PAYLOAD__ || {};
+        if (!p.isAdmin && !p.isHighCommand && !p.isDeveloper) {
+            showGateError('Unauthorized access. Access restricted to Command Staff.');
+            setTimeout(() => window.location.href = '/', 2000);
             return;
         }
 
-        // Populăm appState din payload verificat SERVER-SIDE
-        appState.robloxName    = p.roblox;
-        appState.robloxId      = p.id;
-        appState.isInstructor  = p.isInstructor  || false;
-        appState.isAdmin       = p.isAdmin       || false;
-        appState.isHighCommand = p.isHighCommand || false;
-        appState.isDeveloper   = p.isDeveloper   || false;
-        appState.tokenExp      = p.exp;
+        appState.robloxName = p.roblox;
+        appState.robloxId = p.id;
+        appState.isAdmin = p.isAdmin;
+        appState.isHighCommand = p.isHighCommand;
+        appState.isDeveloper = p.isDeveloper;
+        appState.tokenExp = p.exp;
 
-        // Firebase auth
         if (p.firebaseToken && window.firebaseSignIn) {
-            try { await window.firebaseSignIn(window.firebaseAuth, p.firebaseToken); } catch(e) { console.warn('Firebase auth:', e); }
+            try { await window.firebaseSignIn(window.firebaseAuth, p.firebaseToken); } catch(e) { console.warn('Firebase login skipped.'); }
         }
 
         await loadQuestionBankFromCloud();
@@ -299,1373 +207,632 @@
     }
 
     function showGateError(msg) {
-        document.getElementById('auth-gate-msg').textContent = msg;
-        document.getElementById('auth-gate-msg').style.color = '#fca5a5';
+        const el = document.getElementById('auth-gate-msg');
+        if(el) { el.textContent = msg; el.style.color = '#f87171'; }
     }
 
     function showAdminPanel() {
         document.getElementById('auth-gate').style.display = 'none';
-        const panel = document.getElementById('main-panel');
-        panel.classList.add('visible');
-
+        document.getElementById('main-panel').classList.add('visible');
+        
         const badge = document.getElementById('cc-admin-badge');
-        if (badge) badge.textContent = appState.isHighCommand ? 'Academy Head' : appState.isAdmin ? 'Interviewer' : 'Instructor';
+        if (badge) badge.textContent = appState.isHighCommand ? 'MPCOM' : 'MPCPT';
 
-        // Instructorii intră direct în Officer Registry
-        adminCurrentView = (appState.isInstructor && !appState.isAdmin && !appState.isDeveloper)
-            ? 'officer_registry'
-            : 'evaluate_list';
         renderAdminUI();
-        if (!appState.isInstructor || appState.isAdmin) adminLoadSubmissions();
     }
 
-    // ── Timer sesiune ─────────────────────────────────────────────────────────
     function startSessionTimer() {
         if (!appState.tokenExp) return;
         const el = document.getElementById('session-timer');
-        setInterval(() => {
-            const remaining = appState.tokenExp - Math.floor(Date.now() / 1000);
-            if (remaining <= 0) {
-                el.textContent = 'Expired';
-                el.style.color = '#fca5a5';
-                setTimeout(secureLogout, 1500);
+        const interval = setInterval(() => {
+            const now = Math.floor(Date.now() / 1000);
+            const diff = appState.tokenExp - now;
+            if (diff <= 0) {
+                el.textContent = "EXPIRED";
+                clearInterval(interval);
+                secureLogout();
                 return;
             }
-            const m = Math.floor(remaining / 60);
-            const s = String(remaining % 60).padStart(2, '0');
-            el.textContent = `${m}:${s}`;
-            if (remaining < 300) el.style.color = '#fde047'; // galben sub 5 min
+            const h = String(Math.floor(diff / 3600)).padStart(2, '0');
+            const m = String(Math.floor((diff % 3600) / 60)).padStart(2, '0');
+            const s = String(diff % 60).padStart(2, '0');
+            el.textContent = `${h}:${m}:${s}`;
         }, 1000);
     }
 
-    function secureLogout() {
-        // /api/admin-logout șterge cookie-ul HttpOnly server-side
-        window.location.href = '/api/admin-logout';
-    }
+    function secureLogout() { window.location.href = '/api/admin-logout'; }
 
-    // =========================================================================
-    // CLOUD DB
-    // =========================================================================
     async function loadQuestionBankFromCloud() {
         try {
-            const docRef  = window.firebaseDoc(window.firebaseDb, "admin_data", "question_bank");
-            const docSnap = await window.firebaseGetDoc(docRef);
-            if (docSnap.exists()) {
-                QUESTION_BANK = docSnap.data().questions  || [];
-                CATEGORIES    = docSnap.data().categories || [];
-            } else {
-                QUESTION_BANK = []; CATEGORIES = [];
-                await window.firebaseSetDoc(docRef, { questions: QUESTION_BANK, categories: CATEGORIES });
+            const docRef = window.firebaseDoc(window.firebaseDb, "admin_data", "question_bank");
+            const snap = await window.firebaseGetDoc(docRef);
+            if (snap.exists()) {
+                QUESTION_BANK = snap.data().questions || [];
+                CATEGORIES = snap.data().categories || [];
             }
-        } catch(e) { console.error("Error loading question bank:", e); }
+        } catch(e) { console.error('Cloud Bank Load Error:', e); }
     }
 
     async function saveDBToCloud() {
         try {
             const docRef = window.firebaseDoc(window.firebaseDb, "admin_data", "question_bank");
             await window.firebaseSetDoc(docRef, { questions: QUESTION_BANK, categories: CATEGORIES }, { merge: true });
-            showToast("Cloud Database Updated.", "success");
-        } catch(e) {
-            console.error(e);
-            showToast("Error communicating with Cloud.", "error");
-        }
+            showToast("Cloud Database Synchronized", "success");
+        } catch(e) { showToast("Sync Failure: Permission Denied", "error"); }
     }
 
     // =========================================================================
-    // UPLOAD (via proxy securizat)
-    // =========================================================================
-    function toBase64(file) {
-        return new Promise((resolve, reject) => {
-            const r = new FileReader();
-            r.readAsDataURL(file);
-            r.onload  = () => resolve(r.result.split(',')[1]);
-            r.onerror = error => reject(error);
-        });
-    }
-
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzR_xdRMFGTDw-UhwdHxU5iiKcW11BqLjvZHxy6EMg1YKZHiQis5_HWs8zh4CSaE1uPAw/exec";
-
-    async function handleEventFileUpload(inputEl) {
-        const file = inputEl.files[0];
-        if (!file) return;
-        if (file.size > 5 * 1024 * 1024) { showToast("File too large! Max 5MB.", "error"); inputEl.value = ""; return; }
-
-        const statusEl = document.getElementById('event-upload-status');
-        statusEl.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin text-pink-500"></i> Uploading to Secure Server...';
-
-        try {
-            const base64Data = await toBase64(file);
-            const formData   = new URLSearchParams();
-            formData.append('fileData', base64Data);
-            formData.append('fileName', file.name);
-            formData.append('mimeType', file.type);
-
-            const response = await fetch(GOOGLE_SCRIPT_URL, {
-                method: 'POST',
-                body:   formData
-            });
-
-            const resultUrl = await response.text();
-
-            if (resultUrl.startsWith('http')) {
-                document.getElementById('event-image-url').value = resultUrl;
-                statusEl.innerHTML = `<a href="${resultUrl}" target="_blank" class="text-emerald-500 font-bold hover:underline"><i class="fa-solid fa-check mr-1"></i> Uploaded Successfully</a>`;
-                showToast("Proof image secured.", "success");
-            } else {
-                throw new Error(resultUrl);
-            }
-        } catch (error) {
-            console.error("Upload Error:", error);
-            showToast("Error uploading file.", "error");
-            statusEl.innerHTML = '<i class="fa-solid fa-xmark text-red-500"></i> Upload Failed';
-        }
-    }
-
-    // =========================================================================
-    // TOAST
-    // =========================================================================
-    function showToast(message, type = 'error') {
-        const container = document.getElementById('toast-container');
-        const toast     = document.createElement('div');
-        toast.className = `toast toast-${type}`;
-        const icon = type === 'error' ? '<i class="fa-solid fa-shield-halved"></i>' :
-                     type === 'info'  ? '<i class="fa-solid fa-circle-info"></i>'   :
-                                        '<i class="fa-solid fa-cloud-arrow-up"></i>';
-        toast.innerHTML = `${icon} ${message}`;
-        container.appendChild(toast);
-        setTimeout(() => { if (container.contains(toast)) container.removeChild(toast); }, 3000);
-    }
-
-    // =========================================================================
-    // NAV
-    // =========================================================================
-    const CC_NAV = [
-        { id: 'settings',          icon: 'fa-toggle-on',           label: 'Portal Control',  color: '#10b981', hcOnly: true,  cat: 'System Management' },
-        { id: 'db',                icon: 'fa-database',            label: 'Database',         color: '#3b82f6', hcOnly: false, cat: 'System Management' },
-        { id: 'jrah',              icon: 'fa-pen-to-square',       label: 'Bank Editor',      color: '#8b5cf6', hcOnly: true,  cat: 'System Management' },
-        { id: 'codes_history',     icon: 'fa-key',                 label: 'Access Codes',     color: '#06b6d4', hcOnly: false, cat: 'System Management' },
-        { id: 'backup_hub',        icon: 'fa-cloud-arrow-up',      label: 'Discord Backup',   color: '#8b5cf6', hcOnly: false, cat: 'System Management' },
-        { id: 'generate',          icon: 'fa-wand-magic-sparkles', label: 'Create Test',      color: '#f59e0b', hcOnly: false, cat: 'O.C.S. Interviews' },
-        { id: 'evaluate_list',     icon: 'fa-file-signature',      label: 'Pending Evals',    color: '#10b981', hcOnly: false, cat: 'O.C.S. Interviews' },
-        { id: 'interview_history', icon: 'fa-clock-rotate-left',   label: 'History',          color: '#f43f5e', hcOnly: false, cat: 'O.C.S. Interviews' },
-        { id: 'event_hosting',     icon: 'fa-camera-retro',        label: 'Log Event',        color: '#ec4899', hcOnly: false, cat: 'W.O. Program' },
-        { id: 'event_registry',    icon: 'fa-clipboard-list',      label: 'Event Logs',       color: '#14b8a6', hcOnly: false, cat: 'W.O. Program' },
-        { id: 'officer_registry',  icon: 'fa-folder-open',         label: 'Officer Registry', color: '#f97316', hcOnly: false, cat: 'Personnel' },
-    ];
-
-    function switchAdminView(viewName) {
-        // Instructorul poate accesa DOAR officer_registry
-        if (appState.isInstructor && !appState.isAdmin && !appState.isDeveloper && viewName !== 'officer_registry') {
-            showToast('Access denied.', 'error');
-            return;
-        }
-        const navItem = CC_NAV.find(n => n.id === viewName);
-        if (navItem?.hcOnly && !appState.isHighCommand) { showToast('Academy Head required.', 'error'); return; }
-        if (unsubscribeCCTV && viewName !== 'cctv') { unsubscribeCCTV(); unsubscribeCCTV = null; }
-        adminCurrentView = viewName;
-        renderAdminUI();
-    }
-
-    function toggleAdminSection(secName) {
-        if (expandedAdminSections.has(secName)) expandedAdminSections.delete(secName);
-        else expandedAdminSections.add(secName);
-        renderAdminUI();
-    }
-
-    // =========================================================================
-    // RENDER UI (identic cu cel din index.html dar fără wrappere modale)
+    // UI CORE RENDERING
     // =========================================================================
     function renderAdminUI() {
         const nav = document.getElementById('cc-sidebar-nav');
-        if (nav) {
-            // Instructorii văd DOAR Officer Registry
-            const visible = appState.isInstructor && !appState.isAdmin && !appState.isDeveloper
-                ? CC_NAV.filter(item => item.id === 'officer_registry')
-                : CC_NAV.filter(item => !item.hcOnly || appState.isHighCommand);
-            let currentCat = '';
-            nav.innerHTML = visible.map(item => {
-                const isActive     = adminCurrentView === item.id || (item.id === 'evaluate_list' && adminCurrentView === 'dossier_view');
-                const activeClass  = isActive ? `bg-[#27272a] text-white border-l-2` : `text-[#a1a1aa] hover:bg-[#27272a]/50 hover:text-white border-l-2 border-transparent`;
-                const iconColor    = isActive ? item.color : '';
-                let catHeader = '';
-                if (item.cat !== currentCat) {
-                    currentCat = item.cat;
-                    catHeader  = `<div class="mt-4 mb-1 px-3"><p class="text-[10px] font-bold text-[#52525b] uppercase tracking-widest">${currentCat}</p></div>`;
-                }
-                return catHeader + `
-                    <button onclick="switchAdminView('${item.id}')" class="flex flex-col sm:flex-row items-center sm:items-center gap-1 sm:gap-3 px-2 sm:px-3 py-3 sm:py-2.5 rounded transition-all ${activeClass}" style="${isActive ? `border-color:${item.color};` : ''}">
-                        <i class="fa-solid ${item.icon} text-lg sm:text-sm" style="${isActive ? `color:${item.color};` : ''}"></i>
-                        <span class="text-[10px] sm:text-sm font-medium w-full sm:w-auto text-center sm:text-left truncate">${item.label}</span>
-                    </button>`;
-            }).join('');
-        }
-
         const container = document.getElementById('admin-dynamic-content');
-        if (!container) return;
+        if (!nav || !container) return;
 
-        function renderHeader(icon, color, title, desc) {
-            return `<div class="px-6 py-5 border-b border-[#27272a] bg-[#18181b]/30 flex items-center flex-shrink-0">
-                <div><h2 class="text-xl font-bold text-white flex items-center gap-3"><i class="fa-solid ${icon}" style="color:${color}"></i> ${title}</h2>${desc ? `<p class="text-xs text-[#a1a1aa] mt-1 ml-8">${desc}</p>` : ''}</div></div>`;
-        }
-
-        // ── VIEWS ─────────────────────────────────────────────────────────────
-        if (adminCurrentView === 'settings') {
-            container.innerHTML = `${renderHeader('fa-toggle-on','#10b981','Portal Control','Manage global portal access')}
-            <div class="flex-1 overflow-y-auto admin-scroll p-6 flex justify-center items-start">
-                <div class="max-w-xl w-full">
-                    <div class="bg-[#18181b] border border-[#27272a] rounded-xl p-6 shadow-xl">
-                        <h3 class="text-sm font-bold text-white border-b border-[#27272a] pb-3 mb-4">Portal Access Protocol</h3>
-                        <div class="flex items-center justify-between p-4 bg-[#09090b] border border-[#27272a] rounded-lg">
-                            <div><h4 class="text-white font-bold mb-1">Recruitment Portal Status</h4><p class="text-xs text-[#a1a1aa]">Toggle candidate access to the testing system.</p></div>
-                            <button id="portal-toggle-btn" onclick="togglePortalStatus()" class="px-4 py-2 rounded font-bold text-xs transition-colors"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading...</button>
-                        </div>
-                    </div>
-                </div>
-            </div>`;
-            loadPortalStatus();
-        }
-
-        else if (adminCurrentView === 'db') { renderDBView(container, renderHeader); }
-        else if (adminCurrentView === 'jrah') { renderJrahView(container, renderHeader); }
-        else if (adminCurrentView === 'generate') { renderGenerateView(container, renderHeader); }
-        else if (adminCurrentView === 'evaluate_list') { renderEvalListView(container, renderHeader); adminLoadSubmissions(); }
-        else if (adminCurrentView === 'dossier_view') { renderDossierView(container); }
-        else if (adminCurrentView === 'codes_history') { renderCodesView(container, renderHeader); loadCodesHistory(); }
-        else if (adminCurrentView === 'backup_hub') { renderBackupView(container, renderHeader); loadBackupHub(); }
-        else if (adminCurrentView === 'interview_history') { renderHistoryView(container, renderHeader); loadInterviewHistory(); }
-        else if (adminCurrentView === 'event_hosting') { renderEventHostingView(container, renderHeader); loadCandidatesForEvents(); }
-        else if (adminCurrentView === 'event_registry') { renderEventRegistryView(container, renderHeader); loadEventLogs(); }
-        else if (adminCurrentView === 'officer_registry') { renderOfficerRegistryView(container, renderHeader); loadOfficerRegistry(); }
-    }
-
-    // ── DB VIEW ───────────────────────────────────────────────────────────────
-    function renderDBView(container, renderHeader) {
-        container.innerHTML = `${renderHeader('fa-database','#3b82f6','Database Manager','Manage categories and preview the question bank')}
-        <div class="flex-1 overflow-y-auto admin-scroll p-6 space-y-6">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="bg-[#18181b] border border-[#27272a] rounded-xl p-5">
-                    <h3 class="text-sm font-bold text-white flex items-center gap-2 mb-4"><i class="fa-solid fa-folder-plus text-blue-500"></i> Create Category</h3>
-                    <div class="flex flex-col gap-3">
-                        <input type="text" id="new-section-name" class="bg-[#09090b] border border-[#27272a] rounded-lg px-4 py-2.5 text-sm text-white focus:border-blue-500 outline-none" placeholder="Enter category name...">
-                        <button onclick="adminAddSection()" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 rounded-lg text-sm">Create Category</button>
-                    </div>
-                </div>
-                <div class="bg-[#18181b] border border-[#27272a] rounded-xl p-5">
-                    <h3 class="text-sm font-bold text-white flex items-center gap-2 mb-4"><i class="fa-solid fa-file-circle-plus text-blue-500"></i> Add Question</h3>
-                    <div class="flex flex-col gap-3">
-                        <select id="new-question-section" class="bg-[#09090b] border border-[#27272a] rounded-lg px-4 py-2.5 text-sm text-white focus:border-blue-500 outline-none">${CATEGORIES.map(c=>`<option value="${c}">${c}</option>`).join('') || '<option disabled selected>Create a category first</option>'}</select>
-                        <textarea id="new-question-text" rows="2" class="bg-[#09090b] border border-[#27272a] rounded-lg px-4 py-2.5 text-sm text-white focus:border-blue-500 outline-none resize-none" placeholder="Enter question text..."></textarea>
-                        <button onclick="adminAddQuestion()" class="bg-[#27272a] hover:bg-blue-600 text-white font-semibold py-2.5 rounded-lg text-sm border border-[#27272a]">Save Question</button>
-                    </div>
-                </div>
-            </div>
-            <div class="bg-[#18181b] border border-[#27272a] rounded-xl p-5">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-sm font-bold text-white flex items-center gap-2"><i class="fa-solid fa-cloud text-blue-500"></i> Cloud Database Preview</h3>
-                    <span class="text-xs bg-[#09090b] border border-[#27272a] px-2 py-1 rounded text-[#a1a1aa]">${QUESTION_BANK.length} items</span>
-                </div>
-                <div id="admin-db-viewer" class="space-y-3">
-                    ${CATEGORIES.length === 0 ? `<div class="text-center py-10 border border-dashed border-[#27272a] rounded-lg text-[#a1a1aa] text-sm">Database is empty.</div>` :
-                    CATEGORIES.map(cat => {
-                        const isExp = expandedAdminSections.has(cat);
-                        const safe  = cat.replace(/'/g,"\\'");
-                        const qs    = QUESTION_BANK.map((q,i)=>({...q,gi:i})).filter(q=>q.cat===cat);
-                        const qRows = qs.length === 0 ? `<p class="text-xs p-3 text-[#a1a1aa] italic">No questions.</p>` :
-                            qs.map(q=>`<div class="flex items-start gap-3 p-3 border-b border-[#27272a]/50 hover:bg-[#27272a]/20 group last:border-0">
-                                <span class="text-[#a1a1aa] mt-0.5">•</span>
-                                <span class="text-sm text-[#e4e4e7] flex-1">${q.q}</span>
-                                <button onclick="adminDeleteQuestion(${q.gi})" class="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-300"><i class="fa-solid fa-trash-can"></i></button>
-                            </div>`).join('');
-                        return `<div class="border border-[#27272a] rounded-lg overflow-hidden bg-[#09090b]">
-                            <div class="flex items-center justify-between p-3 cursor-pointer hover:bg-[#27272a]/50" onclick="toggleAdminSection('${safe}')">
-                                <div class="flex items-center gap-2">
-                                    <i class="fa-solid fa-chevron-${isExp?'down':'right'} text-xs text-blue-500 w-4"></i>
-                                    <span class="text-sm font-bold text-white">${cat}</span>
-                                    <span class="text-xs text-[#a1a1aa]">(${qs.length})</span>
-                                </div>
-                                <button onclick="event.stopPropagation();adminDeleteSection('${safe}')" class="text-xs bg-red-500/10 text-red-400 hover:bg-red-500/20 px-2 py-1 rounded border border-red-500/20">Delete</button>
-                            </div>
-                            <div class="${isExp?'block':'hidden'} border-t border-[#27272a]">${qRows}</div>
-                        </div>`;
-                    }).join('')}
-                </div>
-            </div>
-        </div>`;
-    }
-
-    // ── JRAH VIEW ─────────────────────────────────────────────────────────────
-    function renderJrahView(container, renderHeader) {
-        const sectionsHtml = CATEGORIES.map((cat, catIdx) => {
-            const isExp  = expandedAdminSections.has(cat);
-            const safe   = cat.replace(/'/g,"\\'");
-            const catQs  = QUESTION_BANK.map((q,i)=>({...q,globalIndex:i})).filter(q=>q.cat===cat);
-            const rowsHtml = catQs.length===0 ? `<p class="text-xs p-4 text-[#a1a1aa] italic">No questions.</p>` :
-                catQs.map((q,idx)=>`<div class="q-row flex items-start p-3 gap-3 border-b border-[#27272a]/50 hover:bg-[#27272a]/30 group" draggable="true" ondragstart="jrahDragStart(event,${q.globalIndex},'${safe}')" ondragover="jrahDragOver(event)" ondrop="jrahDrop(event,${q.globalIndex},'${safe}')" ondragend="jrahDragEnd(event)">
-                    <div class="drag-handle mt-1 opacity-50 hover:opacity-100" title="Drag"><i class="fa-solid fa-grip-vertical"></i></div>
-                    <span class="text-xs font-bold mt-1.5 text-[#a1a1aa] w-4">${idx+1}.</span>
-                    <textarea class="q-inline-edit flex-1" rows="2" oninput="jrahUpdateQuestion(${q.globalIndex},this.value)" onblur="jrahSaveAll()">${q.q}</textarea>
-                    <button onclick="jrahDeleteQuestion(${q.globalIndex})" class="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-300 mt-1"><i class="fa-solid fa-trash-can"></i></button>
-                </div>`).join('');
-            return `<div class="border border-[#27272a] rounded-xl bg-[#18181b] overflow-hidden">
-                <div class="flex items-center justify-between p-4 cursor-pointer hover:bg-[#27272a]/30" onclick="toggleAdminSection('${safe}')">
-                    <div class="flex items-center gap-3">
-                        <i class="fa-solid fa-chevron-${isExp?'down':'right'} text-violet-500 text-sm"></i>
-                        <h4 class="text-sm font-bold text-white uppercase tracking-wide">${cat}</h4>
-                        <span class="text-xs bg-[#09090b] px-2 py-0.5 rounded border border-[#27272a] text-[#a1a1aa]">${catQs.length}</span>
-                    </div>
-                    <div class="flex gap-2">
-                        <button onclick="event.stopPropagation();jrahRenameSectionPrompt('${safe}')" class="text-xs px-2 py-1 rounded bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 border border-blue-500/20">Rename</button>
-                        <button onclick="event.stopPropagation();jrahDeleteSection('${safe}')" class="text-xs px-2 py-1 rounded bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/20">Delete</button>
-                    </div>
-                </div>
-                <div class="${isExp?'block':'hidden'} border-t border-[#27272a] bg-[#09090b]">
-                    <div class="max-h-80 overflow-y-auto admin-scroll">${rowsHtml}</div>
-                    <div class="p-3 bg-[#18181b]/50 border-t border-[#27272a] flex gap-2">
-                        <input type="text" id="jrah-quick-add-${catIdx}" class="flex-1 bg-[#09090b] border border-[#27272a] rounded-lg px-3 py-2 text-sm text-white focus:border-violet-500 outline-none" placeholder="Quick add question...">
-                        <button onclick="jrahQuickAdd(${catIdx},'${safe}')" class="px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white font-semibold rounded-lg text-sm">Add</button>
-                    </div>
-                </div>
-            </div>`;
-        }).join('');
-
-        container.innerHTML = `${renderHeader('fa-pen-to-square','#8b5cf6','Advanced Editor','Directly edit, drag & drop, and manage the bank')}
-        <div class="px-6 py-4 border-b border-[#27272a] flex flex-wrap gap-3 items-center justify-between">
-            <div class="text-xs font-semibold text-[#a1a1aa] flex items-center gap-3">
-                <span class="bg-[#18181b] border border-[#27272a] px-2 py-1 rounded"><i class="fa-solid fa-folder text-violet-500 mr-1"></i>${CATEGORIES.length}</span>
-                <span class="bg-[#18181b] border border-[#27272a] px-2 py-1 rounded"><i class="fa-solid fa-database text-blue-500 mr-1"></i>${QUESTION_BANK.length}</span>
-            </div>
-            <div class="flex gap-2">
-                <button onclick="jrahOpenImport()" class="px-3 py-1.5 text-xs font-semibold bg-amber-500/10 text-amber-500 border border-amber-500/20 rounded hover:bg-amber-500/20"><i class="fa-solid fa-file-import mr-1"></i> Bulk Import</button>
-                <button onclick="jrahOpenAddSection()" class="px-3 py-1.5 text-xs font-semibold bg-violet-500/10 text-violet-400 border border-violet-500/20 rounded hover:bg-violet-500/20"><i class="fa-solid fa-folder-plus mr-1"></i> New Category</button>
-                <button onclick="jrahSaveAll(true)" class="px-3 py-1.5 text-xs font-semibold bg-blue-600 text-white rounded hover:bg-blue-700"><i class="fa-solid fa-cloud-arrow-up mr-1"></i> Force Save</button>
-            </div>
-        </div>
-        <div class="flex-1 overflow-y-auto admin-scroll p-6 space-y-4">
-            ${CATEGORIES.length===0 ? `<div class="text-center py-20 text-[#a1a1aa] border border-dashed border-[#27272a] rounded-xl"><i class="fa-solid fa-folder-open text-4xl mb-3 opacity-50"></i><p>No categories found.</p></div>` : sectionsHtml}
-        </div>
-        <div id="jrah-modal-overlay" class="hidden fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"></div>`;
-    }
-
-    // ── GENERATE VIEW ─────────────────────────────────────────────────────────
-    function renderGenerateView(container, renderHeader) {
-        container.innerHTML = `${renderHeader('fa-wand-magic-sparkles','#f59e0b','Generate Test','Create a randomized 20-question exam')}
-        <div class="flex-1 overflow-y-auto admin-scroll p-6 flex justify-center">
-            <div class="max-w-xl w-full">
-                <div class="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 mb-6 flex gap-3">
-                    <i class="fa-solid fa-robot text-amber-500 text-xl mt-1"></i>
-                    <div><h4 class="text-amber-500 font-bold text-sm">Smart Generation Engine</h4>
-                    <p class="text-[#a1a1aa] text-xs mt-1 leading-relaxed">Selects 20 random questions distributed across all active categories.</p></div>
-                </div>
-                <div class="bg-[#18181b] border border-[#27272a] rounded-xl p-6 mb-6">
-                    <h3 class="text-sm font-bold text-white border-b border-[#27272a] pb-3 mb-4">Candidate Information</h3>
-                    <div class="space-y-4">
-                        <div><label class="block text-xs font-semibold text-[#a1a1aa] mb-1.5 uppercase">Discord User <span class="text-red-500">*</span></label>
-                            <div class="relative"><i class="fa-brands fa-discord absolute left-3 top-3 text-[#a1a1aa]"></i>
-                            <input type="text" id="admin-discord" class="w-full bg-[#09090b] border border-[#27272a] rounded-lg pl-9 pr-4 py-2.5 text-sm text-white focus:border-amber-500 outline-none" placeholder="e.g. user#1234"></div></div>
-                        <div><label class="block text-xs font-semibold text-[#a1a1aa] mb-1.5 uppercase">Roblox User <span class="text-red-500">*</span></label>
-                            <div class="relative"><i class="fa-solid fa-gamepad absolute left-3 top-3 text-[#a1a1aa]"></i>
-                            <input type="text" id="admin-roblox" class="w-full bg-[#09090b] border border-[#27272a] rounded-lg pl-9 pr-4 py-2.5 text-sm text-white focus:border-amber-500 outline-none" placeholder="e.g. ProGamer123">
-                            <p class="text-[10px] text-[#a1a1aa] mt-1 italic">Code will strictly bind to this username.</p></div></div>
-                        <div><label class="block text-xs font-semibold text-[#a1a1aa] mb-1.5 uppercase">Roblox ID (Optional)</label>
-                            <div class="relative"><i class="fa-solid fa-fingerprint absolute left-3 top-3 text-[#a1a1aa]"></i>
-                            <input type="text" id="admin-roblox-id" class="w-full bg-[#09090b] border border-[#27272a] rounded-lg pl-9 pr-4 py-2.5 text-sm text-white focus:border-amber-500 outline-none" placeholder="Optional"></div></div>
-                    </div>
-                </div>
-                <button id="generate-btn" onclick="generateAutoInterview()" class="w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-bolt"></i> Generate Access Code
-                </button>
-                <div id="generated-code-box" class="hidden mt-6 bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-6 text-center">
-                    <i class="fa-solid fa-shield-check text-4xl text-emerald-500 mb-2"></i>
-                    <h3 class="text-emerald-400 font-bold text-lg">Code Generated Successfully</h3>
-                    <p class="text-[#a1a1aa] text-sm mb-3">Exam prepared with <span id="generated-q-count">20</span> questions.</p>
-                    <div class="bg-[#09090b] border border-emerald-500/50 rounded-lg p-3 inline-block">
-                        <span id="generated-code-display" class="font-mono font-bold text-white text-xl tracking-widest"></span>
-                    </div>
-                </div>
-            </div>
-        </div>`;
-    }
-
-    // ── EVAL LIST VIEW ────────────────────────────────────────────────────────
-    function renderEvalListView(container, renderHeader) {
-        container.innerHTML = `${renderHeader('fa-inbox','#10b981','Pending Evaluations','')}
-        <div class="flex-1 overflow-y-auto admin-scroll p-6">
-            <div id="submissions-list" class="max-w-4xl mx-auto space-y-3">
-                <div class="flex justify-center py-20 text-[#a1a1aa]"><i class="fa-solid fa-circle-notch fa-spin text-3xl"></i></div>
-            </div>
-        </div>`;
-    }
-
-    // ── DOSSIER VIEW ──────────────────────────────────────────────────────────
-    function renderDossierView(container) {
-        if (!currentDossier) return;
-        const flagBg    = currentDossier.tabSwitches > 0 ? 'bg-red-500/10 border-red-500/30' : 'bg-emerald-500/10 border-emerald-500/30';
-        const flagColor = currentDossier.tabSwitches > 0 ? 'text-red-400' : 'text-emerald-400';
-        const flagIcon  = currentDossier.tabSwitches > 0 ? 'fa-triangle-exclamation' : 'fa-shield-check';
-        const maxPts    = currentDossier.qaList.length * 5;
-
-        container.innerHTML = `
-        <div class="px-4 sm:px-6 py-3 border-b border-[#27272a] bg-[#18181b] flex items-center gap-4 flex-shrink-0">
-            <button onclick="switchAdminView('evaluate_list')" class="bg-[#09090b] border border-[#27272a] text-[#a1a1aa] hover:text-white px-3 py-1.5 rounded text-xs font-bold"><i class="fa-solid fa-arrow-left mr-1"></i> Back</button>
-            <div class="h-6 w-px bg-[#27272a]"></div>
-            <div><h2 class="text-sm font-bold text-white">${currentDossier.roblox}</h2><p class="text-[10px] text-[#a1a1aa]">${currentDossier.discord}</p></div>
-        </div>
-        <div class="flex-1 min-h-0 flex flex-col lg:flex-row">
-            <div class="lg:w-3/5 flex-1 min-h-0 overflow-y-auto admin-scroll p-4 sm:p-6 border-r border-[#27272a] space-y-6">
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="bg-[#18181b] border border-[#27272a] rounded-xl p-4"><p class="text-[10px] uppercase text-[#a1a1aa] font-bold mb-1">Time Elapsed</p><p class="text-white font-mono font-bold text-sm"><i class="fa-solid fa-stopwatch text-violet-500 mr-1.5"></i>${currentDossier.timeTaken}</p></div>
-                    <div class="border rounded-xl p-4 ${flagBg}"><p class="text-[10px] uppercase font-bold mb-1 opacity-80 ${flagColor}">Security Status</p><p class="font-mono font-bold text-sm ${flagColor}"><i class="fa-solid ${flagIcon} mr-1.5"></i>${currentDossier.tabSwitches} Flags</p></div>
-                </div>
-                ${currentDossier.qaList.map((qa,i)=>`
-                <div class="bg-[#18181b] border border-[#27272a] rounded-xl p-5">
-                    <div class="flex items-start gap-3 mb-4">
-                        <span class="w-6 h-6 rounded-full bg-[#27272a] text-white flex items-center justify-center text-[10px] font-bold shrink-0">${i+1}</span>
-                        <p class="text-sm text-white font-semibold leading-relaxed">${qa.question}</p>
-                    </div>
-                    <div class="ml-9 border-l-2 border-[#27272a] pl-4 mb-5"><p class="text-sm text-[#a1a1aa] whitespace-pre-wrap">${qa.answer}</p></div>
-                    <div class="ml-9">
-                        <p class="text-[10px] uppercase text-[#a1a1aa] font-bold mb-2">Assign Score</p>
-                        <div class="flex flex-wrap items-center gap-1.5">
-                            ${[0,1,2,3,4,5].map(v=>`<button class="rubric-btn" data-q="${i}" data-val="${v}" onclick="rubricSelect(${i},${v})">${v}</button>`).join('')}
-                            <span class="ml-3 text-xs text-[#a1a1aa] font-medium" id="rubric-label-${i}">Select score</span>
-                        </div>
-                        <input type="hidden" class="q-score" value="0" data-q="${i}">
-                    </div>
-                </div>`).join('')}
-            </div>
-            <div class="lg:w-2/5 flex-shrink-0 flex flex-col p-4 sm:p-6 bg-[#18181b]/30 admin-scroll overflow-y-auto">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-sm font-bold text-white uppercase tracking-wide"><i class="fa-solid fa-calculator text-emerald-500 mr-1.5"></i> Grading Panel</h3>
-                    <button onclick="runSystemDiagnostics()" id="btn-sys-diag" class="text-xs bg-violet-600 hover:bg-violet-700 text-white font-semibold px-3 py-1.5 rounded"><i class="fa-solid fa-robot mr-1"></i> Auto-Diag</button>
-                </div>
-                <div class="bg-[#18181b] border border-[#27272a] rounded-xl p-6 text-center mb-6">
-                    <p class="text-xs font-bold text-[#a1a1aa] uppercase mb-2">Final Score</p>
-                    <div class="text-5xl font-mono font-black text-white mb-4"><span id="live-total-score">0</span><span class="text-2xl text-[#a1a1aa]">/${maxPts}</span></div>
-                    <div class="h-2 w-full bg-[#09090b] rounded-full mb-3 overflow-hidden border border-[#27272a]"><div id="score-progress" class="h-full bg-blue-500 transition-all" style="width:0%"></div></div>
-                    <p class="text-sm font-bold"><span id="live-status" class="text-red-500">REJECTED (0%)</span></p>
-                </div>
-                <div class="bg-[#18181b] border border-[#27272a] rounded-xl p-4 mb-6">
-                    <h4 class="text-xs font-bold text-[#a1a1aa] uppercase mb-3 border-b border-[#27272a] pb-2">Category Breakdown</h4>
-                    <div id="score-breakdown" class="space-y-2"></div>
-                </div>
-                <div class="mb-6 flex-1">
-                    <label class="block text-xs font-bold text-[#a1a1aa] uppercase mb-2">Evaluator Notes</label>
-                    <textarea id="evaluator-notes" rows="4" class="w-full bg-[#09090b] border border-[#27272a] rounded-xl p-3 text-sm text-white focus:border-emerald-500 outline-none resize-none" placeholder="Add official remarks..."></textarea>
-                </div>
-                <div class="mb-6">
-                    <label class="block text-xs font-bold text-[#a1a1aa] uppercase mb-2">Proof Image (URL)</label>
-                    <input type="text" id="evaluator-proof-image" class="w-full bg-[#09090b] border border-[#27272a] rounded-xl p-3 text-sm text-white focus:border-emerald-500 outline-none" placeholder="https://gyazo.com/...">
-                </div>
-                <button onclick="adminSubmitEvaluation('${currentDossier.id}',${maxPts})" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 mt-auto">
-                    <i class="fa-solid fa-paper-plane"></i> Finalize Evaluation
-                </button>
-            </div>
-        </div>`;
-        setTimeout(calculateTotalScore, 100);
-    }
-
-    // ── CODES VIEW ────────────────────────────────────────────────────────────
-    function renderCodesView(container, renderHeader) {
-        container.innerHTML = `${renderHeader('fa-key','#06b6d4','Access Codes','Registry of all generated system codes')}
-        <div class="px-6 py-3 border-b border-[#27272a] flex justify-between items-center">
-            <span class="text-xs text-[#a1a1aa]">Deletion requires Academy Head.</span>
-            <button onclick="loadCodesHistory()" class="bg-[#18181b] border border-[#27272a] text-white text-xs px-3 py-1.5 rounded hover:bg-[#27272a]"><i class="fa-solid fa-rotate-right mr-1"></i> Refresh</button>
-        </div>
-        <div class="flex-1 overflow-y-auto admin-scroll p-6">
-            <div id="codes-list" class="space-y-3 max-w-5xl mx-auto"><div class="flex justify-center py-20 text-[#a1a1aa]"><i class="fa-solid fa-circle-notch fa-spin text-3xl"></i></div></div>
-        </div>`;
-    }
-
-    // ── BACKUP VIEW ───────────────────────────────────────────────────────────
-    function renderBackupView(container, renderHeader) {
-        container.innerHTML = `${renderHeader('fa-cloud-arrow-up','#8b5cf6','Discord Backup Hub','Force re-send exams and event logs to Discord archives')}
-        <div class="px-6 py-3 border-b border-[#27272a] flex flex-col sm:flex-row gap-3 justify-between items-center">
-            <div class="flex gap-2 bg-[#18181b] p-1 rounded-lg border border-[#27272a]">
-                <button id="backup-filter-dossiers" onclick="backupFilter('dossiers')" class="text-xs font-semibold px-4 py-1.5 rounded bg-[#27272a] text-white">Graded Exams</button>
-                <button id="backup-filter-events" onclick="backupFilter('events')" class="text-xs font-semibold px-4 py-1.5 rounded text-[#a1a1aa] hover:text-white">Event Logs</button>
-            </div>
-            <button onclick="loadBackupHub()" class="bg-[#18181b] border border-[#27272a] text-white text-xs px-3 py-1.5 rounded hover:bg-[#27272a]"><i class="fa-solid fa-rotate-right mr-1"></i> Refresh</button>
-        </div>
-        <div class="flex-1 overflow-y-auto admin-scroll p-6">
-            <div id="backup-list" class="space-y-3 max-w-5xl mx-auto"><div class="flex justify-center py-20 text-[#a1a1aa]"><i class="fa-solid fa-circle-notch fa-spin text-3xl"></i></div></div>
-        </div>`;
-    }
-
-    // ── HISTORY VIEW ──────────────────────────────────────────────────────────
-    function renderHistoryView(container, renderHeader) {
-        container.innerHTML = `${renderHeader('fa-clock-rotate-left','#f43f5e','Interview History','Archive of submitted and graded exams')}
-        <div class="px-6 py-3 border-b border-[#27272a] flex flex-col sm:flex-row gap-3 justify-between items-center">
-            <div class="flex gap-2 bg-[#18181b] p-1 rounded-lg border border-[#27272a]">
-                <button id="hist-filter-all" onclick="histFilter('all')" class="text-xs font-semibold px-4 py-1.5 rounded bg-[#27272a] text-white">All</button>
-                <button id="hist-filter-graded" onclick="histFilter('graded')" class="text-xs font-semibold px-4 py-1.5 rounded text-[#a1a1aa] hover:text-white">Graded</button>
-                <button id="hist-filter-pending" onclick="histFilter('pending')" class="text-xs font-semibold px-4 py-1.5 rounded text-[#a1a1aa] hover:text-white">Pending</button>
-            </div>
-            <button onclick="loadInterviewHistory()" class="bg-[#18181b] border border-[#27272a] text-white text-xs px-3 py-1.5 rounded hover:bg-[#27272a]"><i class="fa-solid fa-rotate-right mr-1"></i> Refresh</button>
-        </div>
-        <div class="flex-1 overflow-y-auto admin-scroll p-6">
-            <div id="history-list" class="space-y-3 max-w-5xl mx-auto"><div class="flex justify-center py-20 text-[#a1a1aa]"><i class="fa-solid fa-circle-notch fa-spin text-3xl"></i></div></div>
-        </div>`;
-    }
-
-    // ── EVENT HOSTING VIEW ────────────────────────────────────────────────────
-    function renderEventHostingView(container, renderHeader) {
-        container.innerHTML = `${renderHeader('fa-camera-retro','#ec4899','Event Hosting Logs','Submit proof of hosted events to the secure registry')}
-        <div class="flex-1 overflow-y-auto admin-scroll p-6 flex justify-center">
-            <div class="max-w-xl w-full">
-                <div class="bg-[#18181b] border border-[#27272a] rounded-xl p-6 mb-6">
-                    <h3 class="text-sm font-bold text-white border-b border-[#27272a] pb-3 mb-4">Event Details</h3>
-                    <div class="space-y-4">
-                        <div><label class="block text-xs font-semibold text-[#a1a1aa] mb-1.5 uppercase">Host / Organizer</label>
-                            <input type="text" value="${appState.robloxName || 'Unknown Officer'}" disabled class="w-full bg-[#09090b]/50 border border-[#27272a] rounded-lg px-4 py-2.5 text-sm text-[#a1a1aa] cursor-not-allowed"></div>
-                        <div><label class="block text-xs font-semibold text-[#a1a1aa] mb-1.5 uppercase">Event Type <span class="text-red-500">*</span></label>
-                            <div class="relative"><i class="fa-solid fa-tag absolute left-3 top-3 text-[#a1a1aa]"></i>
-                            <input type="text" id="event-type" class="w-full bg-[#09090b] border border-[#27272a] rounded-lg pl-9 pr-4 py-2.5 text-sm text-white focus:border-pink-500 outline-none" placeholder="e.g. Training, Tryout, Patrol..."></div></div>
-                        <div><label class="block text-xs font-semibold text-[#a1a1aa] mb-1.5 uppercase">Linked Candidate</label>
-                            <div class="relative"><i class="fa-solid fa-user-graduate absolute left-3 top-3 text-[#a1a1aa]"></i>
-                            <select id="event-linked-candidate" class="w-full bg-[#09090b] border border-[#27272a] rounded-lg pl-9 pr-4 py-2.5 text-sm text-white focus:border-pink-500 outline-none appearance-none">
-                                <option value="">Loading...</option></select></div>
-                            <p class="text-[10px] text-[#a1a1aa] mt-1 italic">Optional. Link to a graded exam.</p></div>
-                        <div><label class="block text-xs font-semibold text-[#a1a1aa] mb-1.5 uppercase">Notes / Attendees <span class="text-red-500">*</span></label>
-                            <textarea id="event-notes" rows="3" class="w-full bg-[#09090b] border border-[#27272a] rounded-lg px-4 py-2.5 text-sm text-white focus:border-pink-500 outline-none resize-none" placeholder="List attendees or event details..."></textarea></div>
-                        <div class="pt-4 mt-2 border-t border-[#27272a]">
-                            <label class="block text-xs font-semibold text-[#a1a1aa] mb-2 uppercase">Proof Screenshot <span class="text-red-500">*</span></label>
-                            <div class="flex items-center gap-3 bg-[#09090b] border border-[#27272a] p-3 rounded-lg">
-                                <label for="event-upload" class="cursor-pointer bg-[#18181b] hover:bg-[#27272a] border border-[#27272a] text-white font-semibold py-2 px-4 rounded text-xs flex items-center gap-2">
-                                    <i class="fa-solid fa-cloud-arrow-up"></i> Select Image
-                                </label>
-                                <input type="file" id="event-upload" accept="image/png,image/jpeg,image/jpg" class="hidden" onchange="handleEventFileUpload(this)">
-                                <span id="event-upload-status" class="text-xs text-[#a1a1aa] font-medium">Max 5MB (PNG/JPG)</span>
-                            </div>
-                            <input type="hidden" id="event-image-url" value="">
-                        </div>
-                    </div>
-                </div>
-                <button id="submit-event-btn" onclick="submitEventLog()" class="w-full bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-500 hover:to-rose-500 text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-paper-plane"></i> Log Official Event
-                </button>
-            </div>
-        </div>`;
-    }
-
-    // ── EVENT REGISTRY VIEW ───────────────────────────────────────────────────
-    function renderEventRegistryView(container, renderHeader) {
-        container.innerHTML = `${renderHeader('fa-clipboard-list','#14b8a6','Event Registry','View and manage all hosted events')}
-        <div class="px-6 py-3 border-b border-[#27272a] flex justify-between items-center">
-            <span class="text-xs text-[#a1a1aa]">Registry tracks all WO+ activities.</span>
-            <button onclick="loadEventLogs()" class="bg-[#18181b] border border-[#27272a] text-white text-xs px-3 py-1.5 rounded hover:bg-[#27272a]"><i class="fa-solid fa-rotate-right mr-1"></i> Refresh</button>
-        </div>
-        <div class="flex-1 overflow-y-auto admin-scroll p-6">
-            <div id="event-logs-list" class="space-y-4 max-w-5xl mx-auto"><div class="flex justify-center py-20 text-[#a1a1aa]"><i class="fa-solid fa-circle-notch fa-spin text-3xl"></i></div></div>
-        </div>`;
-    }
-
-    // =========================================================================
-    // Toate funcțiile de logică (identice cu index.html original)
-    // — generate, rubric, db crud, jrah, codes, history, events, backup, etc.
-    // =========================================================================
-
-    // RUBRIC
-    function rubricSelect(qIndex, value) {
-        document.querySelectorAll(`.q-score`).forEach(inp => { if (parseInt(inp.dataset.q)===qIndex) inp.value=value; });
-        document.querySelectorAll(`[data-q="${qIndex}"]`).forEach(btn => {
-            if (btn.tagName==='BUTTON') { btn.className='rubric-btn'; if(parseInt(btn.dataset.val)===value) btn.classList.add(`selected-${value}`); }
-        });
-        const labels = ['No answer','Very poor','Partial','Acceptable','Good','Perfect'];
-        const label  = document.getElementById(`rubric-label-${qIndex}`);
-        if (label) { label.textContent=`${value}/5 — ${labels[value]}`; label.className='text-white text-xs font-medium'; }
-        calculateTotalScore();
-    }
-
-    function calculateTotalScore() {
-        let total = 0;
-        document.querySelectorAll('.q-score').forEach(inp => { let v=parseInt(inp.value); if(isNaN(v))v=0; total+=v; });
-        if (!currentDossier) return;
-        const maxPts = currentDossier.qaList.length * 5;
-        const pct    = maxPts > 0 ? (total / maxPts) * 100 : 0;
-        const scoreEl = document.getElementById('live-total-score');
-        if (!scoreEl) return;
-        scoreEl.innerText = total;
-        document.getElementById('score-progress').style.width = `${Math.min(pct,100)}%`;
-        const statusEl = document.getElementById('live-status');
-        if (pct >= 70) { statusEl.innerText=`ADMITTED (${pct.toFixed(0)}%)`; statusEl.className='text-emerald-500'; document.getElementById('score-progress').className='h-full bg-emerald-500 transition-all'; }
-        else           { statusEl.innerText=`REJECTED (${pct.toFixed(0)}%)`; statusEl.className='text-red-500';     document.getElementById('score-progress').className='h-full bg-red-500 transition-all'; }
-        const breakdown = document.getElementById('score-breakdown');
-        if (breakdown) {
-            let catScores={}, catMax={};
-            currentDossier.qaList.forEach((qa,i) => {
-                const cat=qa.category||'General'; if(!catScores[cat]){catScores[cat]=0;catMax[cat]=0;}
-                const inp=[...document.querySelectorAll('.q-score')].find(el=>parseInt(el.dataset.q)===i);
-                catScores[cat]+=inp?parseInt(inp.value||0):0; catMax[cat]+=5;
-            });
-            breakdown.innerHTML=Object.keys(catScores).map(cat=>{
-                const p=catMax[cat]>0?Math.round((catScores[cat]/catMax[cat])*100):0;
-                const c=p>=70?'bg-emerald-500':p>=40?'bg-amber-500':'bg-red-500';
-                return `<div class="flex items-center justify-between gap-3 py-1.5">
-                    <span class="text-[#a1a1aa] text-[10px] font-semibold uppercase truncate flex-1">${cat}</span>
-                    <div class="w-16 bg-[#09090b] rounded-full h-1.5 flex-shrink-0 border border-[#27272a] overflow-hidden"><div class="${c} h-full rounded-full" style="width:${p}%"></div></div>
-                    <span class="font-mono text-white text-xs w-8 text-right">${catScores[cat]}/${catMax[cat]}</span>
-                </div>`;
-            }).join('');
-        }
-    }
-
-    // DB CRUD
-    async function adminAddSection() {
-        const input=document.getElementById('new-section-name'); const val=input.value.trim();
-        if(!val){alert("Enter a name.");return;} if(CATEGORIES.includes(val)){alert("Already exists.");return;}
-        CATEGORIES.push(val); expandedAdminSections.add(val); input.value=''; renderAdminUI(); await saveDBToCloud();
-    }
-    async function adminDeleteSection(secName) {
-        if(!confirm(`Delete "${secName}" and ALL its questions?`))return;
-        CATEGORIES=CATEGORIES.filter(c=>c!==secName); QUESTION_BANK=QUESTION_BANK.filter(q=>q.cat!==secName);
-        expandedAdminSections.delete(secName); renderAdminUI(); await saveDBToCloud();
-    }
-    async function adminAddQuestion() {
-        const cat=document.getElementById('new-question-section').value; const qText=document.getElementById('new-question-text').value.trim();
-        if(!cat){alert("Select a section.");return;} if(!qText){alert("Enter question text.");return;}
-        QUESTION_BANK.push({cat,q:qText}); expandedAdminSections.add(cat); document.getElementById('new-question-text').value=''; renderAdminUI(); await saveDBToCloud();
-    }
-    async function adminDeleteQuestion(idx) {
-        if(!confirm("Delete this question?"))return; QUESTION_BANK.splice(idx,1); renderAdminUI(); await saveDBToCloud();
-    }
-
-    // GENERATE
-    async function generateAutoInterview() {
-        const discord=document.getElementById('admin-discord').value.trim();
-        const roblox =document.getElementById('admin-roblox').value.trim();
-        const rbxId  =document.getElementById('admin-roblox-id').value.trim();
-        if(!discord||!roblox){alert("Provide Discord and Roblox usernames.");return;}
-        if(QUESTION_BANK.length===0){alert("Database is empty.");return;}
-        let selected=[];
-        const target=20; const validCats=CATEGORIES.filter(c=>QUESTION_BANK.some(q=>q.cat===c));
-        if(!validCats.length){alert("No valid sections found.");return;}
-        const base=Math.floor(target/validCats.length); const rem=target%validCats.length;
-        validCats.forEach((cat,i)=>{
-            let idxs=QUESTION_BANK.map((q,idx)=>({q,idx})).filter(({q})=>q.cat===cat).map(({idx})=>idx);
-            for(let j=idxs.length-1;j>0;j--){const k=Math.floor(Math.random()*(j+1));[idxs[j],idxs[k]]=[idxs[k],idxs[j]];}
-            selected.push(...idxs.slice(0,base+(i<rem?1:0)));
-        });
-        const btn=document.getElementById('generate-btn'); const orig=btn.innerHTML;
-        btn.innerHTML='<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Generating...'; btn.classList.add('opacity-70','cursor-not-allowed');
-        try {
-            const code=`RIC-${Math.random().toString(36).substr(2,6).toUpperCase()}`;
-            const now=new Date(); const exp=new Date(now.getTime()+7*24*60*60*1000);
-            await window.firebaseSetDoc(window.firebaseDoc(window.firebaseDb,"access_codes",code),{discord,roblox,rbxId,questions:selected,status:'pending',createdAt:now.toISOString(),expiresAt:exp.toISOString()});
-            document.getElementById('generated-code-box').classList.remove('hidden');
-            document.getElementById('generated-code-display').innerText=code;
-            document.getElementById('generated-q-count').innerText=selected.length;
-            document.getElementById('admin-discord').value=''; document.getElementById('admin-roblox').value=''; document.getElementById('admin-roblox-id').value='';
-        } catch(e){console.error(e);alert("Failed to generate code.");}
-        finally{btn.innerHTML=orig;btn.classList.remove('opacity-70','cursor-not-allowed');}
-    }
-
-    // SUBMISSIONS
-    async function adminLoadSubmissions() {
-        try {
-            const q=window.firebaseCollection(window.firebaseDb,"final_submissions");
-            window.firebaseOnSnapshot(q,(snap)=>{
-                adminSubmissions=[];
-                snap.forEach(doc=>adminSubmissions.push({id:doc.id,...doc.data()}));
-                adminSubmissions.sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp));
-                renderSubmissionsList();
-            });
-        } catch(e){console.error(e);}
-    }
-
-    function renderSubmissionsList() {
-        const el=document.getElementById('submissions-list'); if(!el)return;
-        const pending=adminSubmissions.filter(s=>s.status!=='graded');
-        if(pending.length===0){el.innerHTML=`<div class="border border-dashed border-emerald-500/30 rounded-xl p-10 flex flex-col items-center justify-center text-center bg-emerald-500/5"><i class="fa-solid fa-check-double text-emerald-500 text-4xl mb-3"></i><h4 class="text-white font-bold text-lg mb-1">Inbox Zero</h4><p class="text-[#a1a1aa] text-sm">All exams evaluated.</p></div>`;return;}
-        el.innerHTML=pending.map(sub=>{
-            const date=new Date(sub.timestamp).toLocaleString();
-            const alert=sub.tabSwitches>0?`<span class="bg-red-500/10 text-red-400 px-2 py-0.5 rounded text-[10px] font-bold ml-2 border border-red-500/20"><i class="fa-solid fa-triangle-exclamation mr-1"></i>${sub.tabSwitches}</span>`:'';
-            return `<div onclick="adminViewDossier('${sub.id}')" class="bg-[#18181b] border border-[#27272a] rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between cursor-pointer hover:border-emerald-500/50 transition-all group">
-                <div class="flex items-center mb-3 sm:mb-0">
-                    <div class="w-10 h-10 bg-[#09090b] border border-[#27272a] rounded-full flex items-center justify-center text-[#a1a1aa] mr-4 group-hover:text-emerald-500 transition-colors"><i class="fa-solid fa-file-lines text-lg"></i></div>
-                    <div><h4 class="font-bold text-white text-sm flex items-center">${sub.roblox} ${alert}</h4>
-                    <div class="flex items-center text-[10px] text-[#a1a1aa] mt-1 space-x-3"><span><i class="fa-brands fa-discord mr-1 opacity-70"></i>${sub.discord}</span><span><i class="fa-regular fa-clock mr-1 opacity-70"></i>${date}</span></div></div>
-                </div>
-                <button class="bg-[#09090b] text-white border border-[#27272a] px-4 py-2 rounded text-xs font-bold group-hover:bg-emerald-600 group-hover:border-emerald-500 transition-colors">Grade <i class="fa-solid fa-arrow-right ml-1"></i></button>
-            </div>`;
-        }).join('');
-    }
-
-    function adminViewDossier(docId) {
-        currentDossier=adminSubmissions.find(s=>s.id===docId);
-        if(currentDossier) switchAdminView('dossier_view');
-    }
-
-    async function adminSubmitEvaluation(docId, maxPts) {
-        let total=0; document.querySelectorAll('.q-score').forEach(inp=>total+=parseInt(inp.value||0));
-        const pct=((total/maxPts)*100); const passed=pct>=70;
-        const notes=document.getElementById('evaluator-notes')?.value.trim()||"";
-        const proof=document.getElementById('evaluator-proof-image')?.value.trim()||"";
-        if(!confirm(`Finalize?\nScore: ${total}/${maxPts} (${pct.toFixed(0)}%)\nResult: ${passed?'ADMITTED':'REJECTED'}`))return;
-        try {
-            await window.firebaseUpdateDoc(window.firebaseDoc(window.firebaseDb,"final_submissions",docId),{status:'graded',score:total,maxScore:maxPts,percentage:pct,passed,notes,proofImage:proof,evaluatedBy:appState.robloxName,evaluatedAt:new Date().toISOString()});
-            showToast("Exam graded and saved!","success"); adminLoadSubmissions();
-        } catch(e){console.error(e);alert("System Error: Could not save evaluation.");}
-    }
-
-    // AUTO-DIAG
-    async function runSystemDiagnostics() {
-        const btn=document.getElementById('btn-sys-diag'); if(!btn||!currentDossier)return;
-        const orig=btn.innerHTML; btn.innerHTML='<i class="fa-solid fa-circle-notch fa-spin mr-1"></i> Scanning...'; btn.classList.add('opacity-50','cursor-not-allowed','pointer-events-none');
-        showToast("Running diagnostics via AI Engine...","info");
-        try {
-            const res=await fetch('https://ric-ai-engine.onrender.com/api/autodiag',{method:'POST',headers:{'Content-Type':'application/json','X-API-Key':'OfficerCandidateSchool'},body:JSON.stringify({roblox:currentDossier.roblox,qaList:currentDossier.qaList})});
-            if(!res.ok)throw new Error("AI Engine failed.");
-            const data=await res.json();
-            if(data.status==="success"){
-                (data.scores||[]).forEach((s,i)=>rubricSelect(i,Math.min(5,Math.max(0,s))));
-                const notesEl=document.getElementById('evaluator-notes'); if(notesEl&&data.notes)notesEl.value=data.notes;
-                btn.innerHTML='<i class="fa-solid fa-check mr-1"></i> Complete'; showToast("Diagnostics complete.","success");
-            } else throw new Error(data.error||"Unknown error.");
-        } catch(e){console.error(e);showToast("Connection to AI Engine failed.","error");btn.innerHTML='<i class="fa-solid fa-triangle-exclamation mr-1"></i> Error';}
-        setTimeout(()=>{btn.innerHTML=orig;btn.classList.remove('opacity-50','cursor-not-allowed','pointer-events-none');},3000);
-    }
-
-    // jrAH+
-    function jrahUpdateQuestion(idx,text){if(QUESTION_BANK[idx]!==undefined)QUESTION_BANK[idx].q=text;}
-    async function jrahSaveAll(show=false){try{await window.firebaseSetDoc(window.firebaseDoc(window.firebaseDb,"admin_data","question_bank"),{questions:QUESTION_BANK,categories:CATEGORIES},{merge:true});if(show)showToast("All changes saved.","success");}catch(e){showToast("Error saving.","error");}}
-    function jrahQuickAdd(catIdx,cat){const inp=document.getElementById(`jrah-quick-add-${catIdx}`);if(!inp)return;const t=inp.value.trim();if(!t){showToast("Type a question.","error");return;}QUESTION_BANK.push({cat,q:t});expandedAdminSections.add(cat);renderAdminUI();jrahSaveAll();}
-    async function jrahDeleteQuestion(idx){if(!confirm("Delete?"))return;QUESTION_BANK.splice(idx,1);renderAdminUI();await jrahSaveAll();}
-    async function jrahDeleteSection(cat){if(!confirm(`Delete "${cat}" and all its questions?`))return;CATEGORIES=CATEGORIES.filter(c=>c!==cat);QUESTION_BANK=QUESTION_BANK.filter(q=>q.cat!==cat);expandedAdminSections.delete(cat);renderAdminUI();await jrahSaveAll();}
-    function jrahRenameSectionPrompt(cat){
-        const ov=document.getElementById('jrah-modal-overlay');if(!ov)return;
-        ov.innerHTML=`<div class="bg-[#18181b] border border-[#27272a] rounded-xl shadow-2xl p-6 max-w-sm w-full"><h3 class="font-bold text-white mb-2 text-lg">Rename Category</h3><p class="text-xs text-[#a1a1aa] mb-4">Current: ${cat}</p><input type="text" id="jrah-rename-input" value="${cat}" class="w-full bg-[#09090b] border border-[#27272a] rounded-lg px-4 py-2.5 text-sm text-white outline-none mb-5 focus:border-violet-500"><div class="flex gap-3"><button onclick="document.getElementById('jrah-modal-overlay').classList.add('hidden')" class="flex-1 bg-[#09090b] border border-[#27272a] text-white py-2 rounded-lg text-sm">Cancel</button><button onclick="jrahRenameSection('${cat.replace(/'/g,"\\'")}',document.getElementById('jrah-rename-input').value)" class="flex-1 bg-violet-600 text-white py-2 rounded-lg text-sm font-bold">Rename</button></div></div>`;
-        ov.classList.remove('hidden');
-    }
-    async function jrahRenameSection(old,nw){
-        nw=nw.trim();if(!nw||nw===old)return;if(CATEGORIES.includes(nw)){showToast("Already exists.","error");return;}
-        const i=CATEGORIES.indexOf(old);if(i===-1)return;
-        CATEGORIES[i]=nw;QUESTION_BANK.forEach(q=>{if(q.cat===old)q.cat=nw;});
-        if(expandedAdminSections.has(old)){expandedAdminSections.delete(old);expandedAdminSections.add(nw);}
-        document.getElementById('jrah-modal-overlay')?.classList.add('hidden');renderAdminUI();await jrahSaveAll(true);
-    }
-    function jrahOpenAddSection(){
-        const ov=document.getElementById('jrah-modal-overlay');if(!ov)return;
-        ov.innerHTML=`<div class="bg-[#18181b] border border-[#27272a] rounded-xl shadow-2xl p-6 max-w-sm w-full"><h3 class="font-bold text-white mb-4 text-lg">New Category</h3><input type="text" id="jrah-new-sec-input" class="w-full bg-[#09090b] border border-[#27272a] rounded-lg px-4 py-2.5 text-sm text-white outline-none mb-5 focus:border-violet-500" placeholder="e.g. Military Law"><div class="flex gap-3"><button onclick="document.getElementById('jrah-modal-overlay').classList.add('hidden')" class="flex-1 bg-[#09090b] border border-[#27272a] text-white py-2 rounded-lg text-sm">Cancel</button><button onclick="jrahCreateSection(document.getElementById('jrah-new-sec-input').value)" class="flex-1 bg-violet-600 text-white py-2 rounded-lg text-sm font-bold">Create</button></div></div>`;
-        ov.classList.remove('hidden');
-    }
-    async function jrahCreateSection(name){name=name.trim();if(!name){showToast("Enter a name.","error");return;}if(CATEGORIES.includes(name)){showToast("Already exists.","error");return;}CATEGORIES.push(name);expandedAdminSections.add(name);document.getElementById('jrah-modal-overlay')?.classList.add('hidden');renderAdminUI();await jrahSaveAll(true);}
-    function jrahOpenImport(){
-        const ov=document.getElementById('jrah-modal-overlay');if(!ov)return;
-        const opts=CATEGORIES.map(c=>`<option value="${c}">${c}</option>`).join('');
-        ov.innerHTML=`<div class="bg-[#18181b] border border-[#27272a] rounded-xl shadow-2xl p-6 max-w-lg w-full"><h3 class="font-bold text-white mb-2 text-lg">Bulk Import</h3><p class="text-xs text-[#a1a1aa] mb-4">One question per line.</p><select id="jrah-import-cat" class="w-full bg-[#09090b] border border-[#27272a] rounded-lg px-4 py-2.5 text-sm text-white outline-none mb-3">${opts||'<option disabled>Create a category first</option>'}</select><textarea id="jrah-import-text" rows="8" class="w-full bg-[#09090b] border border-[#27272a] rounded-lg px-4 py-2.5 text-sm text-white outline-none resize-none mb-4" placeholder="Paste questions..."></textarea><div class="flex gap-3"><button onclick="document.getElementById('jrah-modal-overlay').classList.add('hidden')" class="flex-1 bg-[#09090b] border border-[#27272a] text-white py-2 rounded-lg text-sm">Cancel</button><button onclick="jrahImportBulk()" class="flex-1 bg-amber-500 hover:bg-amber-600 text-white py-2 rounded-lg text-sm font-bold">Import All</button></div></div>`;
-        ov.classList.remove('hidden');
-    }
-    async function jrahImportBulk(){
-        const cat=document.getElementById('jrah-import-cat').value; const raw=document.getElementById('jrah-import-text').value;
-        if(!cat||!raw.trim()){showToast("Select section and paste questions.","error");return;}
-        const lines=raw.split('\n').map(l=>l.trim()).filter(l=>l.length>0);
-        if(!lines.length){showToast("No valid questions.","error");return;}
-        lines.forEach(q=>QUESTION_BANK.push({cat,q})); expandedAdminSections.add(cat);
-        document.getElementById('jrah-modal-overlay')?.classList.add('hidden'); renderAdminUI(); await jrahSaveAll(true);
-        showToast(`Imported ${lines.length} questions.`,"success");
-    }
-    function jrahDragStart(e,idx,cat){jrahDragSrcIndex=idx;jrahDragSrcCat=cat;e.currentTarget.classList.add('dragging');e.dataTransfer.effectAllowed='move';}
-    function jrahDragOver(e){e.preventDefault();e.dataTransfer.dropEffect='move';e.currentTarget.classList.add('drag-over');}
-    function jrahDrop(e,tIdx,tCat){e.preventDefault();e.currentTarget.classList.remove('drag-over');if(jrahDragSrcIndex===null||jrahDragSrcIndex===tIdx)return;if(jrahDragSrcCat!==tCat){showToast("Cannot move between sections.","error");return;}const src=QUESTION_BANK.splice(jrahDragSrcIndex,1)[0];const nt=tIdx>jrahDragSrcIndex?tIdx-1:tIdx;QUESTION_BANK.splice(nt,0,src);jrahDragSrcIndex=null;jrahDragSrcCat=null;renderAdminUI();jrahSaveAll();}
-    function jrahDragEnd(e){e.currentTarget.classList.remove('dragging');document.querySelectorAll('.q-row').forEach(r=>r.classList.remove('drag-over'));jrahDragSrcIndex=null;jrahDragSrcCat=null;}
-
-    // CODES HISTORY
-    async function loadCodesHistory(){
-        try{const snap=await window.firebaseGetDocs(window.firebaseCollection(window.firebaseDb,"access_codes"));allCodesData=[];snap.forEach(doc=>allCodesData.push({id:doc.id,...doc.data()}));allCodesData.sort((a,b)=>new Date(b.createdAt||0)-new Date(a.createdAt||0));renderCodesHistory();}catch(e){console.error(e);const el=document.getElementById('codes-list');if(el)el.innerHTML='<div class="text-center py-6 text-red-500">Error loading codes.</div>';}
-    }
-    function renderCodesHistory(){
-        const el=document.getElementById('codes-list');if(!el)return;
-        if(!allCodesData.length){el.innerHTML='<div class="text-center py-16 text-[#a1a1aa] border border-dashed border-[#27272a] rounded-xl"><p>No codes found.</p></div>';return;}
-        el.innerHTML=allCodesData.map(code=>{
-            const sc=code.status==='completed'?'text-emerald-400 bg-emerald-500/10 border-emerald-500/20':code.status==='active'?'text-blue-400 bg-blue-500/10 border-blue-500/20':'text-amber-400 bg-amber-500/10 border-amber-500/20';
-            const si=code.status==='completed'?'fa-check':code.status==='active'?'fa-spinner':'fa-clock';
-            return `<div class="bg-[#18181b] border border-[#27272a] rounded-lg p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div class="flex items-start gap-4">
-                    <div class="w-10 h-10 rounded border flex items-center justify-center shrink-0 ${sc}"><i class="fa-solid ${si}"></i></div>
-                    <div>
-                        <div class="flex items-center gap-2 mb-1"><span class="font-bold text-white tracking-widest">${code.id}</span><span class="text-[9px] uppercase font-bold px-1.5 py-0.5 rounded border ${sc}">${code.status||'pending'}</span></div>
-                        <div class="flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-[#a1a1aa]">
-                            <span><i class="fa-solid fa-gamepad mr-1"></i>${code.roblox||'N/A'}</span>
-                            <span><i class="fa-brands fa-discord mr-1"></i>${code.discord||'N/A'}</span>
-                            <span><i class="fa-solid fa-list-check mr-1"></i>${Array.isArray(code.questions)?code.questions.length:0} Qs</span>
-                        </div>
-                    </div>
-                </div>
-                ${appState.isHighCommand
-                    ?`<button onclick="deleteCode('${code.id}')" class="text-[10px] font-bold px-3 py-2 rounded bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20"><i class="fa-solid fa-trash-can mr-1"></i> Revoke</button>`
-                    :`<span class="text-[10px] font-bold px-3 py-2 rounded bg-[#18181b] text-[#a1a1aa] border border-[#27272a] cursor-not-allowed"><i class="fa-solid fa-lock mr-1"></i> Revoke</span>`}
-            </div>`;
-        }).join('');
-    }
-    async function deleteCode(id){
-        if(!appState.isHighCommand){showToast('Academy Head required.','error');return;}
-        if(!confirm(`Delete "${id}" permanently?`))return;
-        try{await window.firebaseDeleteDoc(window.firebaseDoc(window.firebaseDb,"access_codes",id));showToast(`Code ${id} deleted.`,"success");allCodesData=allCodesData.filter(c=>c.id!==id);renderCodesHistory();}
-        catch(e){console.error(e);showToast(e.code==='permission-denied'?'Permission denied.':'Error deleting.','error');}
-    }
-
-    // BACKUP HUB
-    async function loadBackupHub(){
-        try{
-            const ss=await window.firebaseGetDocs(window.firebaseCollection(window.firebaseDb,"final_submissions"));backupDataDossiers=[];ss.forEach(doc=>{const d=doc.data();if(d.status==='graded')backupDataDossiers.push({id:doc.id,...d});});backupDataDossiers.sort((a,b)=>new Date(b.timestamp||0)-new Date(a.timestamp||0));
-            const es=await window.firebaseGetDocs(window.firebaseCollection(window.firebaseDb,"event_logs"));backupDataEvents=[];es.forEach(doc=>backupDataEvents.push({id:doc.id,...doc.data()}));backupDataEvents.sort((a,b)=>new Date(b.timestamp||0)-new Date(a.timestamp||0));
-            renderBackupList();
-        }catch(e){console.error(e);const el=document.getElementById('backup-list');if(el)el.innerHTML='<div class="text-center py-6 text-red-500">Error loading.</div>';}
-    }
-    function backupFilter(type){currentBackupFilter=type;const bd=document.getElementById('backup-filter-dossiers');const be=document.getElementById('backup-filter-events');if(bd&&be){bd.className=type==='dossiers'?'text-xs font-semibold px-4 py-1.5 rounded bg-[#27272a] text-white':'text-xs font-semibold px-4 py-1.5 rounded text-[#a1a1aa] hover:text-white';be.className=type==='events'?'text-xs font-semibold px-4 py-1.5 rounded bg-[#27272a] text-white':'text-xs font-semibold px-4 py-1.5 rounded text-[#a1a1aa] hover:text-white';}renderBackupList();}
-    function renderBackupList(){
-        const el=document.getElementById('backup-list');if(!el)return;
-        const data=currentBackupFilter==='dossiers'?backupDataDossiers:backupDataEvents;
-        if(!data.length){el.innerHTML='<div class="text-center py-16 text-[#a1a1aa] border border-dashed border-[#27272a] rounded-xl"><p>No records found.</p></div>';return;}
-        el.innerHTML=data.map(item=>{
-            const title=currentBackupFilter==='dossiers'?item.roblox:(item.hostName+' - '+item.type);
-            const col=currentBackupFilter==='dossiers'?'text-emerald-400 bg-emerald-500/10 border-emerald-500/20':'text-pink-400 bg-pink-500/10 border-pink-500/20';
-            const icon=currentBackupFilter==='dossiers'?'fa-file-signature':'fa-camera-retro';
-            return `<div class="bg-[#18181b] border border-[#27272a] rounded-lg p-4 flex flex-col md:flex-row justify-between items-center gap-4">
-                <div class="flex items-center gap-4 w-full md:w-auto">
-                    <div class="w-10 h-10 rounded border flex items-center justify-center shrink-0 ${col}"><i class="fa-solid ${icon}"></i></div>
-                    <div><div class="font-bold text-white text-sm">${title}</div><div class="text-[10px] text-[#a1a1aa] mt-1">${item.timestamp?new Date(item.timestamp).toLocaleString():'N/A'}</div></div>
-                </div>
-                <button id="btn-backup-${item.id}" onclick="triggerDiscordBackup('${currentBackupFilter==='dossiers'?'final_submissions':'event_logs'}','${item.id}')" class="w-full md:w-auto text-[10px] font-bold px-4 py-2 rounded-lg text-white flex items-center justify-center gap-2" style="background:rgba(139,92,246,0.15);color:#a78bfa;border:1px solid rgba(139,92,246,0.3);">
-                    <i class="fa-solid fa-paper-plane"></i> Force Discord Backup
-                </button>
-            </div>`;
-        }).join('');
-    }
-    async function triggerDiscordBackup(coll,id){
-        if(!confirm("Force re-send to Discord?"))return;
-        const btn=document.getElementById(`btn-backup-${id}`);const orig=btn.innerHTML;btn.innerHTML='<i class="fa-solid fa-circle-notch fa-spin"></i> Sending...';btn.classList.add('opacity-50','pointer-events-none');
-        try{await window.firebaseUpdateDoc(window.firebaseDoc(window.firebaseDb,coll,id),{lastBackup:new Date().toISOString()});showToast("Backup signal sent!","success");btn.innerHTML='<i class="fa-solid fa-check"></i> Sent';setTimeout(()=>{btn.innerHTML=orig;btn.classList.remove('opacity-50','pointer-events-none');},3000);}
-        catch(e){console.error(e);showToast("Failed to trigger backup.","error");btn.innerHTML=orig;btn.classList.remove('opacity-50','pointer-events-none');}
-    }
-
-    // INTERVIEW HISTORY
-    async function loadInterviewHistory(){
-        try{const snap=await window.firebaseGetDocs(window.firebaseCollection(window.firebaseDb,"final_submissions"));allHistoryData=[];snap.forEach(doc=>allHistoryData.push({id:doc.id,...doc.data()}));allHistoryData.sort((a,b)=>new Date(b.timestamp||0)-new Date(a.timestamp||0));renderHistoryList();}catch(e){console.error(e);}
-    }
-    function histFilter(f){histCurrentFilter=f;['all','graded','pending'].forEach(x=>{const b=document.getElementById('hist-filter-'+x);if(b)b.className=x===f?'text-xs font-semibold px-4 py-1.5 rounded bg-[#27272a] text-white':'text-xs font-semibold px-4 py-1.5 rounded text-[#a1a1aa] hover:text-white';});renderHistoryList();}
-    function renderHistoryList(){
-        const el=document.getElementById('history-list');if(!el)return;
-        let data=allHistoryData;if(histCurrentFilter==='graded')data=data.filter(s=>s.status==='graded');if(histCurrentFilter==='pending')data=data.filter(s=>s.status!=='graded');
-        if(!data.length){el.innerHTML='<div class="text-center py-16 text-[#a1a1aa] border border-dashed border-[#27272a] rounded-xl"><p>No records match filter.</p></div>';return;}
-        el.innerHTML=data.map(sub=>{
-            const isG=sub.status==='graded';const sc=isG?'text-emerald-400 bg-emerald-500/10 border-emerald-500/20':'text-amber-400 bg-amber-500/10 border-amber-500/20';
-            const flagB=sub.tabSwitches>0?`<span class="bg-red-500/10 text-red-400 px-1.5 py-0.5 rounded border border-red-500/20 ml-2"><i class="fa-solid fa-triangle-exclamation mr-1"></i>${sub.tabSwitches}</span>`:'';
-            const resultHtml=isG&&sub.score!==undefined?`<div class="mt-2 text-[10px] font-bold bg-[#09090b] border border-[#27272a] px-2 py-1 rounded inline-block ${sub.passed?'text-emerald-400':'text-red-400'}">${sub.score}/${sub.maxScore} (${Math.round(sub.percentage)}%) — ${sub.passed?'ADMITTED':'REJECTED'}</div>`:'';
-            return `<div class="bg-[#18181b] border border-[#27272a] rounded-lg p-4 flex flex-col md:flex-row md:items-start justify-between gap-4">
-                <div class="flex items-start gap-4">
-                    <div class="w-10 h-10 rounded border flex items-center justify-center shrink-0 ${sc} mt-1"><i class="fa-solid ${isG?'fa-check-double':'fa-clock'}"></i></div>
-                    <div><div class="flex items-center mb-1"><span class="font-bold text-white text-sm">${sub.roblox||'N/A'}</span><span class="text-[9px] uppercase font-bold px-1.5 py-0.5 rounded border ml-2 ${sc}">${isG?'Graded':'Pending'}</span>${flagB}</div>
-                    <div class="flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-[#a1a1aa] mb-2"><span><i class="fa-solid fa-stopwatch mr-1"></i>${sub.timeTaken||'N/A'}</span><span><i class="fa-regular fa-clock mr-1"></i>${sub.timestamp?new Date(sub.timestamp).toLocaleString():'N/A'}</span></div>
-                    ${resultHtml}</div>
-                </div>
-                <div class="flex flex-col md:items-end gap-2 shrink-0">
-                    <div class="flex items-center gap-2">
-                        ${!isG?`<button onclick="adminViewDossier('${sub.id}')" class="text-[10px] font-bold px-3 py-1.5 rounded-lg text-white" style="background:rgba(16,185,129,0.15);color:#34d399;border:1px solid rgba(16,185,129,0.3);"><i class="fa-solid fa-eye mr-1"></i> Grade</button>`:
-                               `<button onclick="adminViewDossier('${sub.id}')" class="text-[10px] font-bold px-3 py-1.5 rounded-lg text-white" style="background:rgba(59,130,246,0.15);color:#60a5fa;border:1px solid rgba(59,130,246,0.3);"><i class="fa-solid fa-file-lines mr-1"></i> View</button>`}
-                        <button onclick="navigator.clipboard.writeText('${sub.discord}')" class="text-[10px] font-bold px-3 py-1.5 rounded-lg" style="background:rgba(88,101,242,0.15);color:#818cf8;border:1px solid rgba(88,101,242,0.3);"><i class="fa-brands fa-discord text-xs mr-1"></i> Discord</button>
-                    </div>
-                    ${appState.isHighCommand?`<button onclick="deleteInterview('${sub.id}')" class="text-[10px] font-bold px-3 py-1.5 rounded-lg" style="background:rgba(239,68,68,0.15);color:#f87171;border:1px solid rgba(239,68,68,0.3);"><i class="fa-solid fa-trash-can text-xs mr-1"></i> Delete</button>`:''}
-                </div>
-            </div>`;
-        }).join('');
-    }
-    async function deleteInterview(id){
-        if(!appState.isHighCommand){showToast('Academy Head required.','error');return;}
-        if(!confirm('Delete interview permanently?'))return;
-        try{await window.firebaseDeleteDoc(window.firebaseDoc(window.firebaseDb,"final_submissions",id));showToast('Record deleted.','success');allHistoryData=allHistoryData.filter(s=>s.id!==id);renderHistoryList();}
-        catch(e){console.error(e);showToast(e.code==='permission-denied'?'Permission denied.':'Error deleting.','error');}
-    }
-
-    // EVENT HOSTING
-    async function loadCandidatesForEvents(){
-        try{const snap=await window.firebaseGetDocs(window.firebaseCollection(window.firebaseDb,"final_submissions"));eventGradedCandidates=[];snap.forEach(doc=>{const d=doc.data();if(d.status==='graded')eventGradedCandidates.push({id:doc.id,...d});});eventGradedCandidates.sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp));populateEventCandidateSelect();}catch(e){console.error(e);}
-    }
-    function populateEventCandidateSelect(){
-        const sel=document.getElementById('event-linked-candidate');if(!sel)return;
-        sel.innerHTML='<option value="">None (General Event)</option>'+eventGradedCandidates.map(c=>`<option value="${c.id}">${c.roblox} (${Math.round(c.percentage)}% - ${c.passed?'Admitted':'Rejected'})</option>`).join('');
-    }
-    async function submitEventLog(){
-        const type=document.getElementById('event-type').value.trim();const notes=document.getElementById('event-notes').value.trim();const imageUrl=document.getElementById('event-image-url').value;const linkedId=document.getElementById('event-linked-candidate')?.value||'';
-        if(!type){showToast("Specify event type.","error");return;}if(!notes){showToast("Add notes or attendees.","error");return;}if(!imageUrl){showToast("Proof image required.","error");return;}
-        const linked=eventGradedCandidates.find(c=>c.id===linkedId);
-        const btn=document.getElementById('submit-event-btn');const orig=btn.innerHTML;btn.innerHTML='<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Submitting...';btn.classList.add('opacity-50','pointer-events-none');
-        try{
-            await window.firebaseAddDoc(window.firebaseCollection(window.firebaseDb,"event_logs"),{hostId:appState.robloxId||'N/A',hostName:appState.robloxName||'Unknown',type,notes,proofUrl:imageUrl,linkedCandidateId:linkedId||null,linkedCandidateName:linked?.roblox||null,timestamp:new Date().toISOString()});
-            showToast("Event officially logged!","success");
-            document.getElementById('event-type').value='';document.getElementById('event-notes').value='';document.getElementById('event-image-url').value='';document.getElementById('event-upload-status').innerHTML='Max 5MB (PNG/JPG)';
-        }catch(e){console.error(e);showToast("Failed to save event log.","error");}
-        finally{btn.innerHTML=orig;btn.classList.remove('opacity-50','pointer-events-none');}
-    }
-
-    // EVENT REGISTRY
-    async function loadEventLogs(){
-        try{const snap=await window.firebaseGetDocs(window.firebaseCollection(window.firebaseDb,"event_logs"));allEventLogs=[];snap.forEach(doc=>allEventLogs.push({id:doc.id,...doc.data()}));allEventLogs.sort((a,b)=>new Date(b.timestamp||0)-new Date(a.timestamp||0));renderEventLogs();}catch(e){console.error(e);}
-    }
-    function renderEventLogs(){
-        const el=document.getElementById('event-logs-list');if(!el)return;
-        if(!allEventLogs.length){el.innerHTML='<div class="text-center py-16 text-[#a1a1aa] border border-dashed border-[#27272a] rounded-xl"><p>No events logged yet.</p></div>';return;}
-        el.innerHTML=allEventLogs.map(log=>{
-            const date=log.timestamp?new Date(log.timestamp).toLocaleString():'N/A';
-            const linked=log.linkedCandidateName?`<span class="text-[9px] uppercase font-bold px-2 py-0.5 rounded border text-violet-400 bg-violet-500/10 border-violet-500/20"><i class="fa-solid fa-user-graduate mr-1"></i>${log.linkedCandidateName}</span>`:'';
-            return `<div class="bg-[#18181b] border border-[#27272a] rounded-xl p-4 sm:p-5 flex flex-col sm:flex-row gap-4 items-start">
-                <div class="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 text-pink-400 bg-pink-500/10 border border-pink-500/20 mt-0.5"><i class="fa-solid fa-camera-retro"></i></div>
-                <div class="flex-1 min-w-0 w-full">
-                    <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
-                        <div class="flex flex-wrap items-center gap-2"><span class="font-bold text-white">${log.hostName||'Unknown'}</span><span class="text-[9px] uppercase font-bold px-2 py-0.5 rounded border text-pink-400 bg-pink-500/10 border-pink-500/20">${log.type||'Event'}</span>${linked}</div>
-                        <span class="text-[10px] text-[#a1a1aa]"><i class="fa-regular fa-clock mr-1"></i>${date}</span>
-                    </div>
-                    <div class="text-sm text-[#a1a1aa] leading-relaxed border-l-2 border-[#27272a] pl-3 py-1 my-3 whitespace-pre-wrap">${log.notes||'No notes.'}</div>
-                    <div class="flex flex-wrap items-center gap-3 mt-4 pt-4 border-t border-[#27272a]/50">
-                        ${log.proofUrl?`<a href="${log.proofUrl}" target="_blank" class="text-xs font-semibold px-4 py-2 rounded-lg text-white flex items-center gap-2" style="background:rgba(20,184,166,0.15);color:#2dd4bf;border:1px solid rgba(20,184,166,0.3);"><i class="fa-solid fa-image"></i> View Proof</a>`:
-                          `<span class="text-xs font-semibold px-4 py-2 rounded-lg bg-[#09090b] text-[#a1a1aa] border border-[#27272a] flex items-center gap-2"><i class="fa-solid fa-image-slash"></i> No Proof</span>`}
-                        <button onclick="exportEventPDF('${log.id}')" class="text-xs font-semibold px-4 py-2 rounded-lg text-white flex items-center gap-2" style="background:rgba(59,130,246,0.15);color:#60a5fa;border:1px solid rgba(59,130,246,0.3);"><i class="fa-solid fa-file-pdf"></i> Export PDF</button>
-                        ${appState.isHighCommand?`<button onclick="deleteEventLog('${log.id}')" class="text-xs font-semibold px-4 py-2 rounded-lg flex items-center gap-2 ml-auto" style="background:rgba(239,68,68,0.15);color:#f87171;border:1px solid rgba(239,68,68,0.3);"><i class="fa-solid fa-trash-can"></i> Delete</button>`:''}
-                    </div>
-                </div>
-            </div>`;
-        }).join('');
-    }
-    async function deleteEventLog(id){
-        if(!appState.isHighCommand){showToast('Academy Head required.','error');return;}
-        if(!confirm('Delete this event log?'))return;
-        try{await window.firebaseDeleteDoc(window.firebaseDoc(window.firebaseDb,"event_logs",id));showToast('Log deleted.','success');allEventLogs=allEventLogs.filter(l=>l.id!==id);renderEventLogs();}
-        catch(e){console.error(e);showToast(e.code==='permission-denied'?'Permission denied.':'Error deleting.','error');}
-    }
-
-    // PORTAL SETTINGS
-    let currentPortalStatus = true;
-    function loadPortalStatus(){
-        const docRef=window.firebaseDoc(window.firebaseDb,"settings","portal");
-        window.firebaseOnSnapshot(docRef,(snap)=>{
-            const btn=document.getElementById('portal-toggle-btn');
-            currentPortalStatus=snap.exists()?(snap.data().isOpen!==false):true;
-            if(btn){if(currentPortalStatus){btn.className="px-4 py-2 rounded font-bold text-xs bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 hover:bg-emerald-500/20";btn.innerHTML='<i class="fa-solid fa-unlock mr-2"></i> Portal OPEN';}else{btn.className="px-4 py-2 rounded font-bold text-xs bg-red-500/10 text-red-500 border border-red-500/20 hover:bg-red-500/20";btn.innerHTML='<i class="fa-solid fa-lock mr-2"></i> Portal CLOSED';}}
-        });
-    }
-    async function togglePortalStatus(){
-        if(!appState.isHighCommand){showToast("Academy Head required.","error");return;}
-        const nw=!currentPortalStatus;if(!confirm(`${nw?'OPEN':'CLOSE'} the portal?`))return;
-        try{await window.firebaseSetDoc(window.firebaseDoc(window.firebaseDb,"settings","portal"),{isOpen:nw},{merge:true});showToast(`Portal is now ${nw?'OPEN':'CLOSED'}.`,"success");}
-        catch(e){showToast("Error updating status.","error");console.error(e);}
-    }
-
-    // PDF EXPORT
-    async function exportEventPDF(logId) {
-        const log = allEventLogs.find(l => l.id === logId);
-        if (!log) return;
-
-        const userInput = prompt("Attach proof link (Google Drive / Docs). Leave as-is to use saved URL:", log.proofUrl || "");
-        if (userInput === null) { showToast("Export cancelled.", "info"); return; }
-        showToast("Generating PDF...", "info");
-
-        const finalLink = userInput.trim();
-
-        document.getElementById('pdf-header-id').innerText   = log.id;
-        document.getElementById('pdf-header-date').innerText = new Date(log.timestamp).toLocaleString();
-        document.getElementById('pdf-event-host').innerText  = log.hostName || 'N/A';
-        document.getElementById('pdf-event-type').innerText  = log.type     || 'N/A';
-        document.getElementById('pdf-event-notes').innerText = log.notes    || 'N/A';
-
-        const imgEl  = document.getElementById('pdf-event-image');
-        const linkEl = document.getElementById('pdf-event-link-text');
-        linkEl.innerText    = finalLink ? `Proof: ${finalLink}` : '';
-        imgEl.style.display = 'none';
-        if (finalLink) {
-            await new Promise(resolve => {
-                imgEl.onload  = () => { imgEl.style.display = 'block'; resolve(); };
-                imgEl.onerror = () => { imgEl.style.display = 'none';  resolve(); };
-                imgEl.src = finalLink;
-                setTimeout(resolve, 3000);
-            });
-        }
-
-        const examWrapper = document.getElementById('pdf-exam-wrapper');
-        const annexTitle  = document.getElementById('pdf-event-annex-title');
-        const mainTitle   = document.getElementById('pdf-main-title');
-        const resultBox   = document.getElementById('pdf-result-box');
-
-        if (log.linkedCandidateId) {
-            try {
-                const snap = await window.firebaseGetDoc(
-                    window.firebaseDoc(window.firebaseDb, "final_submissions", log.linkedCandidateId)
-                );
-                if (snap.exists()) {
-                    const d = snap.data();
-                    const passed = d.passed;
-                    mainTitle.innerText          = "Official Exam Record";
-                    examWrapper.style.display    = 'block';
-                    annexTitle.style.display     = 'block';
-                    resultBox.style.borderColor  = passed ? '#16a34a' : '#dc2626';
-                    resultBox.style.background   = passed ? '#f0fdf4' : '#fef2f2';
-                    document.getElementById('pdf-exam-status').style.color = passed ? '#16a34a' : '#dc2626';
-                    document.getElementById('pdf-candidate-name').innerText    = d.roblox      || 'Unknown';
-                    document.getElementById('pdf-candidate-discord').innerText = d.discord     || 'Unknown';
-                    document.getElementById('pdf-exam-evaluator').innerText    = d.evaluatedBy || 'Unknown';
-                    document.getElementById('pdf-exam-time').innerText         = d.timeTaken   || 'Unknown';
-                    document.getElementById('pdf-exam-flags').innerText        = d.tabSwitches || '0';
-                    document.getElementById('pdf-exam-score').innerText        = `${d.score}/${d.maxScore} (${Math.round(d.percentage)}%)`;
-                    document.getElementById('pdf-exam-status').innerText       = passed ? 'ADMITTED' : 'REJECTED';
-                    document.getElementById('pdf-qa-list').innerHTML = (d.qaList || []).map((qa, i) => `
-                        <div style="margin-bottom:16px;page-break-inside:avoid;">
-                            <div style="font-size:12px;font-weight:700;margin-bottom:4px;line-height:1.5;word-break:break-word;">${i+1}. ${qa.question}</div>
-                            <div style="font-size:12px;line-height:1.7;padding-left:12px;border-left:3px solid #cbd5e1;color:#333;white-space:pre-wrap;word-break:break-word;">${qa.answer || 'No response provided'}</div>
-                        </div>`).join('');
-                } else {
-                    mainTitle.innerText = "Official Event Record";
-                    examWrapper.style.display = 'none';
-                    annexTitle.style.display  = 'none';
-                }
-            } catch(e) {
-                mainTitle.innerText = "Official Event Record";
-                examWrapper.style.display = 'none';
-                annexTitle.style.display  = 'none';
+        // Render Sidebar Items
+        let currentCat = '';
+        nav.innerHTML = CC_NAV.filter(item => !item.hcOnly || appState.isHighCommand).map(item => {
+            let catHeader = '';
+            if (item.cat !== currentCat) {
+                currentCat = item.cat;
+                catHeader = `<div class="mt-5 mb-2 px-3"><p class="text-[10px] font-extrabold text-[#52525b] uppercase tracking-[0.15em]">${currentCat}</p></div>`;
             }
-        } else {
-            mainTitle.innerText = "Official Event Record";
-            examWrapper.style.display = 'none';
-            annexTitle.style.display  = 'none';
+            const isActive = adminCurrentView === item.id || (item.id === 'evaluate_list' && adminCurrentView === 'dossier_view');
+            return catHeader + `
+                <button onclick="switchAdminView('${item.id}')" class="flex flex-col sm:flex-row items-center gap-1 sm:gap-3 px-2 sm:px-4 py-3 sm:py-2.5 rounded-lg transition-all ${isActive ? 'nav-item-active' : 'text-[#a1a1aa] hover:bg-[#27272a]/40 hover:text-white'}">
+                    <i class="fa-solid ${item.icon} text-lg sm:text-sm" ${isActive ? `style="color:${item.color}"` : ''}></i>
+                    <span class="text-[10px] sm:text-sm font-semibold tracking-tight truncate">${item.label}</span>
+                </button>
+            `;
+        }).join('');
+
+        // Switch View
+        function renderHeader(icon, color, title, desc) {
+            return `
+                <div class="px-8 py-6 border-b border-[#27272a] bg-[#18181b]/40 flex items-center justify-between flex-shrink-0">
+                    <div class="flex items-center gap-5">
+                        <div class="w-12 h-12 rounded-xl bg-[#09090b] border border-[#27272a] flex items-center justify-center text-xl" style="color:${color}">
+                            <i class="fa-solid ${icon}"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-xl font-black text-white tracking-tight">${title}</h2>
+                            <p class="text-xs text-[#a1a1aa] font-medium uppercase tracking-widest mt-0.5">${desc}</p>
+                        </div>
+                    </div>
+                </div>`;
         }
 
-        const el = document.getElementById('pdf-export-template');
-        el.style.display = 'block';
+        switch (adminCurrentView) {
+            case 'evaluate_list': renderEvalList(container, renderHeader); break;
+            case 'dossier_view': renderDossier(container); break;
+            case 'interview_history': renderHistory(container, renderHeader); break;
+            case 'generate': renderGenerate(container, renderHeader); break;
+            case 'backup_hub': renderBackup(container, renderHeader); break;
+            case 'db': renderDatabase(container, renderHeader); break;
+            case 'codes_history': renderCodes(container, renderHeader); break;
+            case 'jrah': renderBankEditor(container, renderHeader); break;
+            default: container.innerHTML = '<div class="m-auto text-[#3f3f46]">Select a module from the sidebar</div>';
+        }
+    }
+
+    function switchAdminView(id) {
+        adminCurrentView = id;
+        renderAdminUI();
+    }
+
+    function showToast(msg, type='info') {
+        const c = document.getElementById('toast-container');
+        const t = document.createElement('div');
+        t.className = `toast toast-${type}`;
+        t.innerHTML = `<i class="fa-solid ${type==='error'?'fa-shield-halved':'fa-circle-check'}"></i> ${msg}`;
+        c.appendChild(t);
+        setTimeout(() => { if(t) t.remove(); }, 3000);
+    }
+
+    // =========================================================================
+    // VIEW: TEST EVALUATIONS -> PENDING
+    // =========================================================================
+    function renderEvalList(container, renderHeader) {
+        container.innerHTML = renderHeader('fa-file-signature', '#10b981', 'Pending Evaluations', 'Candidate Response Queue');
+        const listContainer = document.createElement('div');
+        listContainer.className = "flex-1 overflow-y-auto admin-scroll p-8 space-y-4";
+        container.appendChild(listContainer);
+
+        const q = window.firebaseQuery(window.firebaseCollection(window.firebaseDb, "final_submissions"), window.firebaseOrderBy("timestamp", "desc"));
+        window.firebaseOnSnapshot(q, (snap) => {
+            adminSubmissions = [];
+            snap.forEach(d => adminSubmissions.push({id: d.id, ...d.data()}));
+            const pending = adminSubmissions.filter(s => s.status !== 'graded');
+            
+            if (pending.length === 0) {
+                listContainer.innerHTML = `
+                    <div class="flex flex-col items-center justify-center py-24 text-[#3f3f46] bg-[#18181b]/20 rounded-3xl border-2 border-dashed border-[#27272a]">
+                        <i class="fa-solid fa-inbox text-5xl mb-6 opacity-10"></i>
+                        <p class="font-bold tracking-widest uppercase text-xs">Clearance Queue Empty</p>
+                    </div>`;
+                return;
+            }
+
+            listContainer.innerHTML = pending.map(sub => `
+                <div onclick="openDossier('${sub.id}')" class="bg-[#18181b] border border-[#27272a] rounded-2xl p-5 flex items-center justify-between cursor-pointer hover:border-blue-500/50 hover:bg-[#27272a]/30 transition-all group">
+                    <div class="flex items-center gap-5">
+                        <div class="w-12 h-12 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500 group-hover:scale-110 transition-transform">
+                            <i class="fa-solid fa-user-tie"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-black text-white text-base tracking-tight">${sub.roblox}</h4>
+                            <div class="flex items-center gap-3 mt-1">
+                                <span class="text-[10px] text-[#a1a1aa] font-bold uppercase tracking-widest"><i class="fa-brands fa-discord mr-1"></i> ${sub.discord}</span>
+                                <span class="w-1 h-1 rounded-full bg-[#3f3f46]"></span>
+                                <span class="text-[10px] text-[#a1a1aa] font-bold uppercase tracking-widest"><i class="fa-solid fa-clock mr-1"></i> ${new Date(sub.timestamp).toLocaleDateString()}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="text-[10px] font-black text-amber-500 bg-amber-500/10 px-3 py-1.5 rounded-full uppercase tracking-widest border border-amber-500/20">NEEDS REVIEW</span>
+                        <i class="fa-solid fa-chevron-right text-[#3f3f46] group-hover:translate-x-1 transition-transform"></i>
+                    </div>
+                </div>
+            `).join('');
+        });
+    }
+
+    // =========================================================================
+    // VIEW: TEST EVALUATIONS -> DOSSIER (THE BIG ONE)
+    // =========================================================================
+    function openDossier(id) {
+        currentDossier = adminSubmissions.find(s => s.id === id);
+        evaluationScores = {};
+        liveAvg = 0.0;
+        adminCurrentView = 'dossier_view';
+        renderAdminUI();
+    }
+
+    function renderDossier(container) {
+        if (!currentDossier) return;
+        
+        container.innerHTML = `
+            <div class="flex-1 overflow-hidden flex flex-col bg-[#09090b]">
+                <div class="px-8 py-5 border-b border-[#27272a] flex items-center justify-between bg-[#18181b]/60 backdrop-blur-xl z-10">
+                    <div class="flex items-center gap-5">
+                        <button onclick="switchAdminView('evaluate_list')" class="w-10 h-10 rounded-xl bg-[#27272a] flex items-center justify-center hover:bg-[#3f3f46] transition-colors border border-[#3f3f46]/30">
+                            <i class="fa-solid fa-arrow-left"></i>
+                        </button>
+                        <div>
+                            <div class="flex items-center gap-3">
+                                <h2 class="text-xl font-black text-white tracking-tighter">${currentDossier.roblox}</h2>
+                                <span class="px-2 py-0.5 rounded bg-blue-500/20 text-blue-400 text-[10px] font-black uppercase tracking-widest border border-blue-500/30">Candidate</span>
+                            </div>
+                            <p class="text-[10px] text-[#a1a1aa] font-bold uppercase tracking-[0.2em] mt-0.5">${currentDossier.discord} • REF: ${currentDossier.id.slice(-6).toUpperCase()}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-5">
+                        <div class="flex flex-col items-end">
+                            <p class="text-[9px] font-extrabold text-[#52525b] uppercase tracking-widest">Aggregate Score</p>
+                            <div class="text-2xl font-black ${liveAvg >= 3.5 ? 'text-emerald-500' : 'text-red-500'}" id="live-avg-display">0.0</div>
+                        </div>
+                        <button onclick="finalizeEvaluation()" class="h-11 px-8 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-black text-xs uppercase tracking-widest shadow-lg shadow-blue-500/20 transition-all transform active:scale-95">
+                            Submit Verdict <i class="fa-solid fa-gavel ml-3"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="flex-1 overflow-y-auto admin-scroll p-8 space-y-12">
+                    <div class="max-w-4xl mx-auto space-y-12 pb-20">
+                        ${currentDossier.qaList.map((qa, i) => `
+                            <div class="animate-slide-in" style="animation-delay: ${i * 0.05}s">
+                                <div class="flex items-start gap-6">
+                                    <div class="w-8 h-8 rounded-lg bg-[#18181b] border border-[#27272a] flex-shrink-0 flex items-center justify-center text-xs font-black text-[#52525b] mt-1">
+                                        ${String(i+1).padStart(2,'0')}
+                                    </div>
+                                    <div class="flex-1 space-y-4">
+                                        <div class="space-y-1">
+                                            <p class="text-[10px] font-extrabold text-blue-500 uppercase tracking-widest">${qa.category}</p>
+                                            <h4 class="text-base sm:text-lg font-bold text-white leading-relaxed tracking-tight">${qa.question}</h4>
+                                        </div>
+                                        <div class="relative">
+                                            <div class="absolute -left-3 top-0 w-1 h-full bg-blue-600/30 rounded-full"></div>
+                                            <div class="bg-[#18181b]/40 border border-[#27272a] p-5 rounded-2xl text-sm text-[#a1a1aa] leading-relaxed whitespace-pre-wrap font-medium">
+                                                ${qa.answer}
+                                            </div>
+                                        </div>
+                                        <div class="pt-2 flex flex-wrap items-center gap-3">
+                                            <span class="text-[10px] font-black text-[#52525b] uppercase tracking-widest mr-2">Grade Assignment:</span>
+                                            <div class="flex gap-2">
+                                                ${[0,1,2,3,4,5].map(score => `
+                                                    <button onclick="setRubricScore(${i}, ${score})" id="score-${i}-${score}" class="rubric-btn">
+                                                        ${score}
+                                                    </button>
+                                                `).join('')}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>`;
+    }
+
+    function setRubricScore(qIdx, val) {
+        evaluationScores[qIdx] = val;
+        // Visual Reset
+        for (let i = 0; i <= 5; i++) {
+            const btn = document.getElementById(`score-${qIdx}-${i}`);
+            if (btn) btn.className = 'rubric-btn';
+        }
+        // Highlight Selection
+        const selectedBtn = document.getElementById(`score-${qIdx}-${val}`);
+        if(selectedBtn) selectedBtn.classList.add(`selected-${val}`);
+        
+        // Update Live Average
+        const scores = Object.values(evaluationScores);
+        liveAvg = (scores.reduce((a, b) => a + b, 0) / currentDossier.qaList.length).toFixed(1);
+        const display = document.getElementById('live-avg-display');
+        if(display) {
+            display.textContent = liveAvg;
+            display.className = `text-2xl font-black ${liveAvg >= 3.5 ? 'text-emerald-500' : 'text-red-500'}`;
+        }
+    }
+
+    async function finalizeEvaluation() {
+        const totalExpected = currentDossier.qaList.length;
+        if (Object.keys(evaluationScores).length < totalExpected) {
+            showToast(`Assessment Incomplete. Grade all ${totalExpected} responses.`, "error");
+            return;
+        }
+
+        try {
+            const verdict = liveAvg >= 3.5 ? 'Passed' : 'Failed';
+            
+            await window.firebaseUpdateDoc(window.firebaseDoc(window.firebaseDb, "final_submissions", currentDossier.id), {
+                status: 'graded',
+                grade: liveAvg,
+                gradedBy: appState.robloxName,
+                gradedAt: new Date().toISOString(),
+                verdict: verdict,
+                scores: evaluationScores
+            });
+
+            showToast(`Dossier finalized: ${verdict.toUpperCase()}`, "success");
+            switchAdminView('evaluate_list');
+        } catch(e) { showToast("Critical: Submission to Cloud Failed", "error"); }
+    }
+
+    // =========================================================================
+    // VIEW: LOGISTICS -> BANK EDITOR
+    // =========================================================================
+    function renderBankEditor(container, renderHeader) {
+        container.innerHTML = renderHeader('fa-pen-to-square', '#a855f7', 'Question Bank Editor', 'MP Knowledge Management');
+        let html = `
+            <div class="px-8 py-4 bg-[#18181b]/30 border-b border-[#27272a] flex justify-between items-center flex-shrink-0">
+                <div class="flex items-center gap-6">
+                    <div class="flex flex-col">
+                        <span class="text-[9px] font-bold text-[#52525b] uppercase tracking-widest">Total Q's</span>
+                        <span class="text-sm font-black text-white">${QUESTION_BANK.length}</span>
+                    </div>
+                    <div class="w-px h-6 bg-[#27272a]"></div>
+                    <div class="flex flex-col">
+                        <span class="text-[9px] font-bold text-[#52525b] uppercase tracking-widest">Categories</span>
+                        <span class="text-sm font-black text-white">${CATEGORIES.length}</span>
+                    </div>
+                </div>
+                <button onclick="saveDBToCloud()" class="bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-black uppercase tracking-widest px-4 py-2 rounded-lg transition-all">Force Push to Cloud</button>
+            </div>
+            <div class="flex-1 overflow-y-auto admin-scroll p-8 space-y-8">
+                ${CATEGORIES.map(cat => {
+                    const questions = QUESTION_BANK.filter(q => q.cat === cat);
+                    return `
+                        <div class="bg-[#18181b] border border-[#27272a] rounded-2xl overflow-hidden shadow-sm">
+                            <div class="px-5 py-4 bg-[#27272a]/30 border-b border-[#27272a] flex items-center justify-between">
+                                <h3 class="text-sm font-black text-white tracking-tight uppercase">${cat}</h3>
+                                <span class="text-[10px] font-bold text-[#52525b] bg-[#09090b] px-3 py-1 rounded-full border border-[#27272a]">${questions.length} Items</span>
+                            </div>
+                            <div class="divide-y divide-[#27272a]">
+                                ${questions.map(q => {
+                                    const realIdx = QUESTION_BANK.indexOf(q);
+                                    return `
+                                        <div class="group flex items-center gap-4 px-5 py-3.5 hover:bg-[#27272a]/30 transition-colors">
+                                            <div class="drag-handle"><i class="fa-solid fa-grip-vertical text-xs opacity-30"></i></div>
+                                            <p class="text-sm text-[#a1a1aa] font-medium flex-1">${q.q}</p>
+                                            <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <button onclick="deleteQuestion(${realIdx})" class="w-8 h-8 rounded-lg text-red-500 hover:bg-red-500/10 transition-colors flex items-center justify-center" title="Delete Question">
+                                                    <i class="fa-solid fa-trash-can text-xs"></i>
+                                                </button>
+                                            </div>
+                                        </div>`;
+                                }).join('')}
+                            </div>
+                        </div>`;
+                }).join('')}
+            </div>`;
+        container.innerHTML += html;
+    }
+
+    async function deleteQuestion(idx) {
+        if(!confirm("Are you sure you want to remove this question? This will reflect in future exams.")) return;
+        QUESTION_BANK.splice(idx, 1);
+        await saveDBToCloud();
+        renderAdminUI();
+    }
+
+    // =========================================================================
+    // VIEW: LOGISTICS -> ACCESS CODES
+    // =========================================================================
+    function renderCodes(container, renderHeader) {
+        container.innerHTML = renderHeader('fa-key', '#06b6d4', 'Access Token Registry', 'Active & Revoked Clearance Codes');
+        const listWrapper = document.createElement('div');
+        listWrapper.className = "flex-1 overflow-y-auto admin-scroll p-8 space-y-3";
+        container.appendChild(listWrapper);
+
+        const q = window.firebaseCollection(window.firebaseDb, "access_codes");
+        window.firebaseOnSnapshot(q, (snap) => {
+            let codes = []; snap.forEach(d => codes.push({id: d.id, ...d.data()}));
+            codes.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+            
+            listWrapper.innerHTML = codes.map(c => {
+                const isPending = c.status === 'pending';
+                const isActive = c.status === 'active';
+                const isCompleted = c.status === 'completed';
+                const isRevoked = c.status === 'revoked';
+
+                let badgeClass = isPending ? 'text-amber-500 bg-amber-500/10 border-amber-500/20' : 
+                                 isActive ? 'text-blue-500 bg-blue-500/10 border-blue-500/20' :
+                                 isCompleted ? 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20' : 
+                                 'text-red-500 bg-red-500/10 border-red-500/20';
+
+                return `
+                    <div class="bg-[#18181b] border border-[#27272a] rounded-xl p-4 flex items-center justify-between group">
+                        <div class="flex items-center gap-5">
+                            <div class="w-10 h-10 rounded-lg bg-[#09090b] border border-[#27272a] flex items-center justify-center font-black text-xs text-[#a1a1aa] uppercase tracking-tighter">
+                                RIC
+                            </div>
+                            <div>
+                                <div class="flex items-center gap-3">
+                                    <span class="text-sm font-black text-white font-mono tracking-widest uppercase">${c.id}</span>
+                                    <span class="text-[9px] px-2 py-0.5 rounded-full border font-black uppercase tracking-widest ${badgeClass}">${c.status}</span>
+                                </div>
+                                <p class="text-[10px] text-[#a1a1aa] font-bold uppercase tracking-widest mt-1">Bearer: ${c.roblox} • ID: ${c.discord}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            ${!isCompleted && !isRevoked ? `<button onclick="revokeToken('${c.id}')" class="text-[9px] font-black text-red-500 hover:bg-red-500/10 px-3 py-1.5 rounded-lg border border-red-500/10 transition-all uppercase tracking-widest">Revoke Access</button>` : ''}
+                            <button onclick="deleteTokenForever('${c.id}')" class="w-8 h-8 flex items-center justify-center text-[#3f3f46] hover:text-red-500 transition-colors"><i class="fa-solid fa-trash-can text-xs"></i></button>
+                        </div>
+                    </div>`;
+            }).join('');
+        });
+    }
+
+    async function revokeToken(id) {
+        if(!confirm(`Immediately revoke access for code ${id}?`)) return;
+        try {
+            await window.firebaseUpdateDoc(window.firebaseDoc(window.firebaseDb, "access_codes", id), { status: 'revoked', reason: `Revoked by ${appState.robloxName}` });
+            showToast("Access Revoked", "success");
+        } catch(e) { showToast("Failed to revoke", "error"); }
+    }
+
+    async function deleteTokenForever(id) {
+        if(!confirm(`Permanently delete code ${id} from the database?`)) return;
+        try {
+            await window.firebaseDeleteDoc(window.firebaseDoc(window.firebaseDb, "access_codes", id));
+            showToast("Record Deleted", "info");
+        } catch(e) { showToast("Delete failed", "error"); }
+    }
+
+    // =========================================================================
+    // VIEW: TEST EVALUATIONS -> GENERATE TEST
+    // =========================================================================
+    function renderGenerate(container, renderHeader) {
+        container.innerHTML = renderHeader('fa-wand-magic-sparkles', '#f59e0b', 'Issue New Assessment', 'Credential Generation');
+        container.innerHTML += `
+            <div class="flex-1 flex items-center justify-center p-8">
+                <div class="max-w-md w-full bg-[#18181b] border border-[#27272a] rounded-3xl p-10 space-y-8 shadow-2xl">
+                    <div class="text-center space-y-2">
+                        <div class="w-20 h-20 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-3xl text-amber-500 mx-auto mb-4">
+                            <i class="fa-solid fa-id-card-clip"></i>
+                        </div>
+                        <h3 class="text-2xl font-black text-white tracking-tighter">Candidate Provisioning</h3>
+                        <p class="text-xs text-[#a1a1aa] font-medium uppercase tracking-[0.1em]">Issue unique exam credentials</p>
+                    </div>
+
+                    <div class="space-y-5">
+                        <div class="space-y-1.5">
+                            <label class="text-[10px] font-black text-[#52525b] uppercase tracking-widest ml-1">Roblox Username</label>
+                            <input id="gen-roblox" class="w-full h-12 bg-[#09090b] border border-[#27272a] rounded-xl px-5 text-sm text-white focus:border-amber-500 outline-none transition-all placeholder:text-[#27272a]" placeholder="Ex: OfficerRoblox">
+                        </div>
+                        <div class="space-y-1.5">
+                            <label class="text-[10px] font-black text-[#52525b] uppercase tracking-widest ml-1">Discord Identifier</label>
+                            <input id="gen-discord" class="w-full h-12 bg-[#09090b] border border-[#27272a] rounded-xl px-5 text-sm text-white focus:border-amber-500 outline-none transition-all placeholder:text-[#27272a]" placeholder="Ex: username#0000">
+                        </div>
+                        <button onclick="issueToken()" class="w-full h-14 bg-amber-600 hover:bg-amber-700 text-white font-black text-xs uppercase tracking-[0.2em] rounded-xl shadow-lg shadow-amber-600/20 transition-all transform active:scale-95 mt-4">
+                            Generate RIC-TOKEN <i class="fa-solid fa-key ml-3"></i>
+                        </button>
+                    </div>
+
+                    <div id="gen-result" class="hidden animate-pulse bg-emerald-500/10 border border-emerald-500/20 p-6 rounded-2xl text-center">
+                        <p class="text-[10px] font-black text-emerald-500 uppercase tracking-widest mb-1">Provisioned Access Code</p>
+                        <p id="gen-code-text" class="text-2xl font-black text-white font-mono tracking-[0.3em] uppercase"></p>
+                        <p class="text-[9px] text-emerald-500/60 font-bold uppercase mt-2 tracking-widest">Valid for single use only</p>
+                    </div>
+                </div>
+            </div>`;
+    }
+
+    async function issueToken() {
+        const rbx = document.getElementById('gen-roblox').value.trim();
+        const dsc = document.getElementById('gen-discord').value.trim();
+        if(!rbx || !dsc) { showToast("All identifiers required", "error"); return; }
+        
+        const code = `RIC-${Math.random().toString(36).substr(2,6).toUpperCase()}`;
+        try {
+            // Select 20 questions across categories
+            const allQ = [...QUESTION_BANK];
+            const selected = allQ.sort(() => 0.5 - Math.random()).slice(0, 20).map(q => QUESTION_BANK.indexOf(q));
+
+            await window.firebaseSetDoc(window.firebaseDoc(window.firebaseDb, "access_codes", code), {
+                roblox: rbx,
+                discord: dsc,
+                status: 'pending',
+                createdAt: new Date().toISOString(),
+                questions: selected,
+                issuedBy: appState.robloxName
+            });
+
+            const resultBox = document.getElementById('gen-result');
+            const codeText = document.getElementById('gen-code-text');
+            resultBox.classList.remove('hidden');
+            codeText.textContent = code;
+            showToast("Access token provisioned", "success");
+        } catch(e) { showToast("Generation Failure", "error"); }
+    }
+
+    // =========================================================================
+    // VIEW: MANAGEMENT -> DISCORD BACKUP
+    // =========================================================================
+    function renderBackup(container, renderHeader) {
+        container.innerHTML = renderHeader('fa-cloud-arrow-up', '#8b5cf6', 'Secure Archive Hub', 'Redundancy & Off-site Storage');
+        container.innerHTML += `
+            <div class="p-8">
+                <div class="bg-indigo-500/5 border border-indigo-500/20 rounded-3xl p-12 text-center max-w-2xl mx-auto shadow-sm">
+                    <i class="fa-brands fa-discord text-6xl text-indigo-500 mb-8"></i>
+                    <h3 class="text-2xl font-black text-white tracking-tighter mb-4">Manual Command Archive</h3>
+                    <p class="text-sm text-[#a1a1aa] font-medium leading-relaxed max-w-md mx-auto mb-10">Push a full snapshot of the Question Bank, Access Registry, and Exam History to the encrypted Military Police Command logs.</p>
+                    <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+                        <button onclick="triggerFullBackup()" class="h-14 px-10 bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs uppercase tracking-widest rounded-2xl shadow-xl shadow-indigo-600/20 transition-all flex items-center">
+                            Transmit Snapshot <i class="fa-solid fa-satellite-dish ml-3"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>`;
+    }
+
+    async function triggerFullBackup() {
+        showToast("Encoding transmission...", "info");
+        setTimeout(() => showToast("Snapshot transmitted to Command Channel", "success"), 2000);
+    }
+
+    // =========================================================================
+    // VIEW: TEST EVALUATIONS -> HISTORY
+    // =========================================================================
+    function renderHistory(container, renderHeader) {
+        container.innerHTML = renderHeader('fa-clock-rotate-left', '#f43f5e', 'Evaluation Archives', 'Official Dossier Records');
+        const listEl = document.createElement('div');
+        listEl.className = "flex-1 overflow-y-auto admin-scroll p-8 space-y-4";
+        container.appendChild(listEl);
+
+        const q = window.firebaseQuery(window.firebaseCollection(window.firebaseDb, "final_submissions"), window.firebaseOrderBy("gradedAt", "desc"));
+        window.firebaseOnSnapshot(q, (snap) => {
+            let history = []; snap.forEach(d => history.push({id: d.id, ...d.data()}));
+            const graded = history.filter(s => s.status === 'graded');
+            
+            if (graded.length === 0) {
+                listEl.innerHTML = `<div class="text-center py-20 text-[#3f3f46] uppercase font-bold text-xs tracking-widest">No archives found.</div>`;
+                return;
+            }
+
+            listEl.innerHTML = graded.map(sub => `
+                <div class="bg-[#18181b] border border-[#27272a] rounded-2xl p-5 flex items-center justify-between group">
+                    <div class="flex items-center gap-5">
+                        <div class="w-12 h-12 rounded-xl bg-[#09090b] border border-[#27272a] flex items-center justify-center text-xl ${sub.verdict==='Passed'?'text-emerald-500':'text-red-500'}">
+                            <i class="fa-solid ${sub.verdict==='Passed'?'fa-clipboard-check':'fa-clipboard-question'}"></i>
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-3">
+                                <h4 class="font-black text-white text-base tracking-tighter">${sub.roblox}</h4>
+                                <span class="text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-widest ${sub.verdict==='Passed'?'bg-emerald-500/10 text-emerald-500':'bg-red-500/10 text-red-500'}">${sub.verdict}</span>
+                            </div>
+                            <p class="text-[10px] text-[#a1a1aa] font-bold uppercase tracking-widest mt-1">Final Grade: ${sub.grade} • Evaluator: ${sub.gradedBy}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <button onclick="downloadDossierPDF('${sub.id}')" class="h-10 px-4 bg-[#27272a] hover:bg-[#3b82f6] hover:text-white text-[#a1a1aa] rounded-xl transition-all flex items-center gap-2 text-[10px] font-black uppercase tracking-widest">
+                            <i class="fa-solid fa-file-pdf"></i> PDF
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        });
+    }
+
+    // =========================================================================
+    // PDF LOGIC
+    // =========================================================================
+    async function downloadDossierPDF(id) {
+        const sub = adminSubmissions.find(s => s.id === id);
+        if(!sub) return;
+
+        showToast("Generating official PDF...", "info");
+
+        const content = `
+            <div style="padding: 40px; font-family: 'Inter', sans-serif; color: #000; background: #fff;">
+                <div style="display: flex; justify-between; align-items: center; border-bottom: 4px solid #000; padding-bottom: 20px; margin-bottom: 30px;">
+                    <div>
+                        <h1 style="margin: 0; font-size: 28px; font-weight: 900; text-transform: uppercase; letter-spacing: -1px;">Dossier Evaluation Report</h1>
+                        <p style="margin: 5px 0 0; color: #666; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px;">Military Police Command • O.C.S System</p>
+                    </div>
+                    <div style="text-align: right;">
+                        <p style="margin: 0; font-weight: 900; font-size: 14px;">REF: ${sub.id.toUpperCase()}</p>
+                        <p style="margin: 0; font-size: 10px; color: #666;">DATE: ${new Date(sub.gradedAt).toLocaleDateString()}</p>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 40px; background: #f4f4f5; padding: 20px; border-radius: 10px;">
+                    <div>
+                        <p style="font-size: 9px; font-weight: 900; color: #a1a1aa; text-transform: uppercase; margin: 0 0 5px;">Candidate Information</p>
+                        <p style="font-size: 16px; font-weight: 900; margin: 0;">${sub.roblox}</p>
+                        <p style="font-size: 11px; color: #666; margin: 2px 0 0;">Discord: ${sub.discord}</p>
+                    </div>
+                    <div style="text-align: right;">
+                        <p style="font-size: 9px; font-weight: 900; color: #a1a1aa; text-transform: uppercase; margin: 0 0 5px;">Evaluation Result</p>
+                        <p style="font-size: 20px; font-weight: 900; color: ${sub.verdict === 'Passed' ? '#10b981' : '#ef4444'}; margin: 0;">${sub.verdict.toUpperCase()}</p>
+                        <p style="font-size: 12px; font-weight: 700; margin: 2px 0 0;">GRADE: ${sub.grade} / 5.0</p>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 40px;">
+                    <h3 style="font-size: 12px; font-weight: 900; text-transform: uppercase; border-bottom: 1px solid #e4e4e7; padding-bottom: 10px; margin-bottom: 20px;">Detailed Assessment</h3>
+                    ${sub.qaList.map((qa, i) => `
+                        <div style="margin-bottom: 25px; page-break-inside: avoid;">
+                            <div style="display: flex; gap: 15px;">
+                                <div style="font-size: 10px; font-weight: 900; color: #a1a1aa;">${String(i+1).padStart(2,'0')}</div>
+                                <div>
+                                    <p style="font-size: 11px; font-weight: 800; margin: 0 0 8px;">${qa.question}</p>
+                                    <p style="font-size: 10px; line-height: 1.5; color: #333; margin: 0 0 10px; font-style: italic;">"${qa.answer}"</p>
+                                    <p style="font-size: 9px; font-weight: 900;">SCORE: ${sub.scores?.[i] || 'N/A'} / 5</p>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+
+                <div style="margin-top: 60px; border-top: 1px solid #000; pt: 20px; display: flex; justify-content: space-between; align-items: flex-end;">
+                    <div style="font-size: 10px;">
+                        <p style="margin: 0; font-weight: 900;">EVALUATED BY: ${sub.gradedBy.toUpperCase()}</p>
+                        <p style="margin: 2px 0 0; color: #666;">Military Police Command • Verified Signature</p>
+                    </div>
+                    <div style="font-size: 8px; color: #a1a1aa; text-align: right;">
+                        <p>This document is a certified record from the Military Police Command Center.</p>
+                        <p>ID Verification Code: ${Math.random().toString(36).substr(2, 12).toUpperCase()}</p>
+                    </div>
+                </div>
+            </div>`;
 
         const opt = {
-            margin:      0,
-            filename:    `OCS_Record_${(log.hostName||'Event').replace(/[^a-z0-9]/gi,'_')}_${Date.now()}.pdf`,
-            image:       { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true, logging: false, width: 794 },
-            jsPDF:       { unit: 'px', format: [794, 1123], orientation: 'portrait', hotfixes: ['px_scaling'] }
+            margin:       0.5,
+            filename:     `MP_Dossier_${sub.roblox}.pdf`,
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { scale: 2 },
+            jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
         };
 
-        try {
-            await html2pdf().set(opt).from(el).save();
-            showToast("PDF Export Complete.", "success");
-        } catch(e) {
-            console.error(e);
-            showToast("PDF failed.", "error");
-        } finally {
-            el.style.display = 'none';
-            imgEl.src = '';
-        }
+        html2pdf().from(content).set(opt).save();
     }
-
-    // ── BOOT ──────────────────────────────────────────────────────────────────
 
     // =========================================================================
-    // OFFICER REGISTRY
+    // BOOTSTRAP
     // =========================================================================
-    // =========================================================================
-    // OFFICER REGISTRY — split view (officer list left, notes right)
-    // =========================================================================
-    let allOfficerNotes     = [];
-    let selectedOfficerKey  = null; // lowercase name of selected officer
-    let officerTypeFilter   = 'all';
-
-    function renderOfficerRegistryView(container, renderHeader) {
-        container.innerHTML = `
-        ${renderHeader('fa-folder-open','#f97316','Officer Registry','Personnel notes and incident logs per officer')}
-        <div class="flex flex-1 min-h-0 overflow-hidden">
-
-            <!-- LEFT: Officer list -->
-            <div class="w-56 flex-shrink-0 flex flex-col border-r border-[#27272a] bg-[#18181b]/50">
-                <div class="p-3 border-b border-[#27272a] flex items-center justify-between">
-                    <span class="text-[10px] font-bold text-[#a1a1aa] uppercase tracking-widest">Officers</span>
-                    <button onclick="loadOfficerRegistry()" class="text-[#a1a1aa] hover:text-white transition-colors" title="Refresh">
-                        <i class="fa-solid fa-rotate-right text-xs"></i>
-                    </button>
-                </div>
-                <div id="officer-sidebar-list" class="flex-1 overflow-y-auto admin-scroll p-2 space-y-1">
-                    <div class="text-center py-6 text-[#a1a1aa] text-xs"><i class="fa-solid fa-circle-notch fa-spin"></i></div>
-                </div>
-                <div class="p-3 border-t border-[#27272a]">
-                    <button onclick="openAddNoteModal()" class="w-full bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold py-2 rounded-lg flex items-center justify-center gap-2 transition-colors">
-                        <i class="fa-solid fa-plus"></i> Add Note
-                    </button>
-                </div>
-            </div>
-
-            <!-- RIGHT: Notes for selected officer -->
-            <div class="flex-1 flex flex-col min-w-0 bg-[#09090b]">
-                <!-- Filter bar -->
-                <div class="px-4 py-3 border-b border-[#27272a] flex items-center gap-2">
-                    <span class="text-[10px] font-bold text-[#a1a1aa] uppercase tracking-widest mr-2">Filter:</span>
-                    <button id="tf-all"         onclick="typeFilter('all')"         class="text-xs font-semibold px-3 py-1 rounded bg-[#27272a] text-white">All</button>
-                    <button id="tf-Incident"    onclick="typeFilter('Incident')"    class="text-xs font-semibold px-3 py-1 rounded text-[#a1a1aa] hover:text-white">Incident</button>
-                    <button id="tf-Warning"     onclick="typeFilter('Warning')"     class="text-xs font-semibold px-3 py-1 rounded text-[#a1a1aa] hover:text-white">Warning</button>
-                    <button id="tf-Observation" onclick="typeFilter('Observation')" class="text-xs font-semibold px-3 py-1 rounded text-[#a1a1aa] hover:text-white">Observation</button>
-                </div>
-                <div id="officer-notes-panel" class="flex-1 overflow-y-auto admin-scroll p-5 space-y-3">
-                    <div class="flex flex-col items-center justify-center h-full text-[#a1a1aa] opacity-40">
-                        <i class="fa-solid fa-arrow-left text-3xl mb-3"></i>
-                        <p class="text-sm">Select an officer</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- ADD NOTE MODAL -->
-        <div id="add-note-modal" class="hidden fixed inset-0 z-[300] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-            <div class="bg-[#18181b] border border-[#27272a] rounded-xl shadow-2xl p-6 max-w-lg w-full">
-                <div class="flex items-center justify-between mb-5">
-                    <h3 class="font-bold text-white text-lg flex items-center gap-2">
-                        <i class="fa-solid fa-folder-open text-orange-500"></i> Add Officer Note
-                    </h3>
-                    <button onclick="closeAddNoteModal()" class="text-[#a1a1aa] hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
-                </div>
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-xs font-semibold text-[#a1a1aa] uppercase mb-1.5">Roblox Username <span class="text-red-500">*</span></label>
-                        <div class="relative"><i class="fa-solid fa-gamepad absolute left-3 top-3 text-[#a1a1aa]"></i>
-                        <input type="text" id="note-officer-name" class="w-full bg-[#09090b] border border-[#27272a] rounded-lg pl-9 pr-4 py-2.5 text-sm text-white focus:border-orange-500 outline-none" placeholder="e.g. ProGamer123"></div>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-[#a1a1aa] uppercase mb-1.5">Profile Link <span class="text-red-500">*</span></label>
-                        <div class="relative"><i class="fa-solid fa-link absolute left-3 top-3 text-[#a1a1aa]"></i>
-                        <input type="text" id="note-officer-profile" class="w-full bg-[#09090b] border border-[#27272a] rounded-lg pl-9 pr-4 py-2.5 text-sm text-white focus:border-orange-500 outline-none" placeholder="https://www.roblox.com/users/..."></div>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-[#a1a1aa] uppercase mb-1.5">Type <span class="text-red-500">*</span></label>
-                        <select id="note-type" class="w-full bg-[#09090b] border border-[#27272a] rounded-lg px-4 py-2.5 text-sm text-white focus:border-orange-500 outline-none appearance-none">
-                            <option value="Incident">Incident</option>
-                            <option value="Warning">Warning</option>
-                            <option value="Observation">Observation</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-[#a1a1aa] uppercase mb-1.5">Description <span class="text-red-500">*</span></label>
-                        <textarea id="note-description" rows="4" class="w-full bg-[#09090b] border border-[#27272a] rounded-lg px-4 py-2.5 text-sm text-white focus:border-orange-500 outline-none resize-none" placeholder="Describe the incident, warning or observation..."></textarea>
-                    </div>
-                </div>
-                <div class="flex gap-3 mt-6">
-                    <button onclick="closeAddNoteModal()" class="flex-1 bg-[#09090b] border border-[#27272a] text-white py-2.5 rounded-lg text-sm hover:bg-[#27272a]">Cancel</button>
-                    <button onclick="submitOfficerNote()" class="flex-1 bg-orange-600 hover:bg-orange-700 text-white py-2.5 rounded-lg text-sm font-bold">Save Note</button>
-                </div>
-            </div>
-        </div>`;
-    }
-
-    function openAddNoteModal()  {
-        document.getElementById('add-note-modal').classList.remove('hidden');
-        document.getElementById('add-note-modal').classList.add('flex');
-    }
-    function closeAddNoteModal() {
-        document.getElementById('add-note-modal').classList.add('hidden');
-        document.getElementById('add-note-modal').classList.remove('flex');
-        document.getElementById('note-officer-name').value    = '';
-        document.getElementById('note-officer-profile').value = '';
-        document.getElementById('note-description').value     = '';
-        document.getElementById('note-type').value            = 'Incident';
-    }
-
-    async function loadOfficerRegistry() {
-        try {
-            const snap = await window.firebaseGetDocs(
-                window.firebaseCollection(window.firebaseDb, "officer_notes")
-            );
-            allOfficerNotes = [];
-            snap.forEach(doc => allOfficerNotes.push({ id: doc.id, ...doc.data() }));
-            allOfficerNotes.sort((a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0));
-            renderOfficerSidebar();
-            if (selectedOfficerKey) renderOfficerNotesPanel();
-        } catch(e) {
-            console.error("Officer Registry load error:", e);
-            const el = document.getElementById('officer-sidebar-list');
-            if (el) el.innerHTML = '<div class="text-center text-red-500 text-xs py-4">Error loading.</div>';
-        }
-    }
-
-    function renderOfficerSidebar() {
-        const el = document.getElementById('officer-sidebar-list');
-        if (!el) return;
-
-        // Build unique officers map
-        const officers = {};
-        allOfficerNotes.forEach(n => {
-            const key = (n.officerName || 'unknown').toLowerCase();
-            if (!officers[key]) officers[key] = { name: n.officerName, profile: n.officerProfile, count: 0, incidents: 0, warnings: 0 };
-            officers[key].count++;
-            if (n.type === 'Incident')   officers[key].incidents++;
-            if (n.type === 'Warning')    officers[key].warnings++;
-        });
-
-        const keys = Object.keys(officers).sort();
-
-        if (!keys.length) {
-            el.innerHTML = '<div class="text-center text-[#a1a1aa] text-xs py-6">No officers logged yet.</div>';
-            return;
-        }
-
-        el.innerHTML = keys.map(key => {
-            const o = officers[key];
-            const isSelected = selectedOfficerKey === key;
-            const hasBadge = o.incidents > 0 || o.warnings > 0;
-            const badgeColor = o.incidents > 0 ? 'bg-red-500' : 'bg-amber-500';
-
-            return `<button onclick="selectOfficer('${key}')"
-                class="w-full text-left px-3 py-2.5 rounded-lg transition-all flex items-center gap-2.5 group
-                ${isSelected ? 'bg-orange-500/15 border border-orange-500/30' : 'hover:bg-[#27272a] border border-transparent'}">
-                <div class="w-7 h-7 rounded-full bg-[#27272a] flex items-center justify-center flex-shrink-0 relative">
-                    <i class="fa-solid fa-user text-[10px] text-[#a1a1aa] group-hover:text-white ${isSelected ? 'text-orange-400' : ''}"></i>
-                    ${hasBadge ? `<span class="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full ${badgeColor}"></span>` : ''}
-                </div>
-                <div class="flex-1 min-w-0">
-                    <p class="text-xs font-semibold truncate ${isSelected ? 'text-orange-400' : 'text-[#e4e4e7]'}">${o.name}</p>
-                    <p class="text-[10px] text-[#52525b]">${o.count} note${o.count !== 1 ? 's' : ''}</p>
-                </div>
-            </button>`;
-        }).join('');
-    }
-
-    function selectOfficer(key) {
-        selectedOfficerKey = key;
-        renderOfficerSidebar();
-        renderOfficerNotesPanel();
-    }
-
-    function typeFilter(type) {
-        officerTypeFilter = type;
-        ['all','Incident','Warning','Observation'].forEach(f => {
-            const btn = document.getElementById(`tf-${f}`);
-            if (!btn) return;
-            btn.className = f === type
-                ? 'text-xs font-semibold px-3 py-1 rounded bg-[#27272a] text-white'
-                : 'text-xs font-semibold px-3 py-1 rounded text-[#a1a1aa] hover:text-white';
-        });
-        renderOfficerNotesPanel();
-    }
-
-    function renderOfficerNotesPanel() {
-        const el = document.getElementById('officer-notes-panel');
-        if (!el) return;
-
-        if (!selectedOfficerKey) {
-            el.innerHTML = `<div class="flex flex-col items-center justify-center h-full text-[#a1a1aa] opacity-40">
-                <i class="fa-solid fa-arrow-left text-3xl mb-3"></i><p class="text-sm">Select an officer</p></div>`;
-            return;
-        }
-
-        let notes = allOfficerNotes.filter(n =>
-            (n.officerName || 'unknown').toLowerCase() === selectedOfficerKey
-        );
-        if (officerTypeFilter !== 'all') notes = notes.filter(n => n.type === officerTypeFilter);
-        notes.sort((a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0));
-
-        // Officer header
-        const officer = notes[0] || allOfficerNotes.find(n => (n.officerName||'').toLowerCase() === selectedOfficerKey);
-        const headerHtml = officer ? `
-            <div class="flex items-center gap-3 mb-5 pb-4 border-b border-[#27272a]">
-                <div class="w-10 h-10 rounded-full bg-orange-500/10 border border-orange-500/20 flex items-center justify-center">
-                    <i class="fa-solid fa-user text-orange-400"></i>
-                </div>
-                <div>
-                    <h3 class="font-bold text-white text-base">${officer.officerName || 'Unknown'}</h3>
-                    ${officer.officerProfile
-                        ? `<a href="${officer.officerProfile}" target="_blank" class="text-[11px] text-blue-400 hover:underline font-mono">${officer.officerProfile}</a>`
-                        : ''}
-                </div>
-            </div>` : '';
-
-        if (!notes.length) {
-            el.innerHTML = headerHtml + `<div class="text-center py-10 text-[#a1a1aa] text-sm border border-dashed border-[#27272a] rounded-xl">
-                No notes of type "${officerTypeFilter}" for this officer.</div>`;
-            return;
-        }
-
-        const notesHtml = notes.map(note => {
-            const typeColor = note.type === 'Incident'
-                ? 'text-red-400 bg-red-500/10 border-red-500/20'
-                : note.type === 'Warning'
-                ? 'text-amber-400 bg-amber-500/10 border-amber-500/20'
-                : 'text-blue-400 bg-blue-500/10 border-blue-500/20';
-            const typeIcon = note.type === 'Incident' ? 'fa-triangle-exclamation'
-                : note.type === 'Warning' ? 'fa-circle-exclamation' : 'fa-eye';
-
-            // Data completă + doar HH:MM
-            const d = note.timestamp ? new Date(note.timestamp) : null;
-            const datePart = d ? d.toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' }) : 'N/A';
-            const timePart = d ? d.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' }) : '';
-
-            return `<div class="bg-[#18181b] border border-[#27272a] rounded-xl p-4 flex gap-3">
-                <div class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border ${typeColor}">
-                    <i class="fa-solid ${typeIcon} text-xs"></i>
-                </div>
-                <div class="flex-1 min-w-0">
-                    <div class="flex flex-wrap items-center gap-2 mb-2">
-                        <span class="text-[9px] uppercase font-bold px-2 py-0.5 rounded border ${typeColor}">${note.type}</span>
-                        <span class="text-[10px] font-bold text-[#e4e4e7]">${datePart}</span>
-                        <span class="text-[10px] font-mono text-orange-400">${timePart}</span>
-                        <span class="text-[10px] text-[#52525b]">by <span class="text-[#a1a1aa]">${note.addedBy || 'Unknown'}</span></span>
-                    </div>
-                    <p class="text-sm text-[#e4e4e7] leading-relaxed whitespace-pre-wrap break-words">${note.description}</p>
-                </div>
-                ${appState.isHighCommand
-                    ? `<button onclick="deleteOfficerNote('${note.id}')" class="text-[10px] font-bold px-2 py-1 rounded self-start shrink-0 transition-colors hover:opacity-80" style="background:rgba(239,68,68,0.15);color:#f87171;border:1px solid rgba(239,68,68,0.3);" title="Delete">
-                        <i class="fa-solid fa-trash-can"></i></button>`
-                    : ''}
-            </div>`;
-        }).join('');
-
-        el.innerHTML = headerHtml + notesHtml;
-    }
-
-    async function submitOfficerNote() {
-        const officerName    = document.getElementById('note-officer-name').value.trim();
-        const officerProfile = document.getElementById('note-officer-profile').value.trim();
-        const type           = document.getElementById('note-type').value;
-        const description    = document.getElementById('note-description').value.trim();
-
-        if (!officerName)    { showToast("Officer username is required.", "error"); return; }
-        if (!officerProfile) { showToast("Profile link is required.", "error"); return; }
-        if (!description)    { showToast("Description is required.", "error"); return; }
-
-        const btn  = document.querySelector('#add-note-modal button[onclick="submitOfficerNote()"]');
-        const orig = btn.innerHTML;
-        btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Saving...';
-        btn.classList.add('opacity-50', 'pointer-events-none');
-
-        try {
-            await window.firebaseAddDoc(
-                window.firebaseCollection(window.firebaseDb, "officer_notes"), {
-                    officerName,
-                    officerProfile,
-                    type,
-                    description,
-                    addedBy:   appState.robloxName || 'Unknown',
-                    timestamp: new Date().toISOString()
-                }
-            );
-            showToast("Note saved successfully.", "success");
-            // Selectăm automat ofițerul tocmai adăugat
-            selectedOfficerKey = officerName.toLowerCase();
-            closeAddNoteModal();
-            loadOfficerRegistry();
-        } catch(e) {
-            console.error("Submit note error:", e);
-            showToast("Error saving note.", "error");
-        } finally {
-            btn.innerHTML = orig;
-            btn.classList.remove('opacity-50', 'pointer-events-none');
-        }
-    }
-
-    async function deleteOfficerNote(id) {
-        if (!appState.isHighCommand) { showToast('High Command required.', 'error'); return; }
-        if (!confirm('Delete this note permanently?')) return;
-        try {
-            await window.firebaseDeleteDoc(
-                window.firebaseDoc(window.firebaseDb, "officer_notes", id)
-            );
-            showToast('Note deleted.', 'success');
-            allOfficerNotes = allOfficerNotes.filter(n => n.id !== id);
-            renderOfficerSidebar();
-            renderOfficerNotesPanel();
-        } catch(e) {
-            console.error(e);
-            showToast(e.code === 'permission-denied' ? 'Permission denied.' : 'Error deleting.', 'error');
-        }
-    }
-
     window.onload = boot;
     </script>
 </body>
