@@ -1,7 +1,7 @@
 import crypto from 'crypto';
 
 export default function handler(req, res) {
-    const clientId    = '4804343523527209309';
+    const clientId    = '8831904588313718077';
     const protocol    = req.headers['x-forwarded-proto'] || 'https';
     const host        = req.headers.host;
     const redirectUri = encodeURIComponent(`${protocol}://${host}/api/callback`);
