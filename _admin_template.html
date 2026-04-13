@@ -193,11 +193,15 @@
     appState.tokenExp      = p.exp;
 
     if (p.firebaseToken && window.firebaseSignIn) {
-        try {
-            const userCredential = await window.firebaseSignIn(window.firebaseAuth, p.firebaseToken);
-            await userCredential.user.getIdToken(true);
-        } catch(e) { console.warn('Firebase login skipped.', e); }
-    }
+    try {
+        const userCredential = await window.firebaseSignIn(window.firebaseAuth, p.firebaseToken);
+        await userCredential.user.getIdToken(true);
+        
+        // DEBUG — șterge după ce rezolvi
+        const idTokenResult = await userCredential.user.getIdTokenResult();
+        console.log('Firebase claims:', JSON.stringify(idTokenResult.claims));
+    } catch(e) { console.warn('Firebase login skipped.', e); }
+}
 
     await loadQuestionBankFromCloud();
     startSessionTimer();
