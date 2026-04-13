@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OCS Evaluation Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"></script>
+    
+    <style>
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #f8fafc; /* slate-50 - aspect curat de dashboard */
+            color: #0f172a;
+        }
+        .option-btn { 
+            transition: all 0.2s ease-in-out; 
+            border: 1px solid #e2e8f0; 
+        }
+        .option-btn:hover:not(:disabled) { 
+            background: #f0fdf4; /* verde foarte deschis / albastru deschis */
+            border-color: #2563eb; 
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+        }
+        .correct { 
+            background: #dcfce7 !important; 
+            border-color: #22c55e !important; 
+            color: #166534 !important; 
+        }
+        .wrong { 
+            background: #fee2e2 !important; 
+            border-color: #ef4444 !important; 
+            color: #991b1b !important; 
+        }
+        .progress-fill { transition: width 0.3s ease; }
+        
+        /* Tranziții pentru ecrane */
+        .screen-fade {
+            animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 sm:p-8">
+
+    <div id="app-container" class="w-full max-w-4xl bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden relative border border-slate-100 min-h-[500px] flex flex-col">
+        
+        <!-- Navbar simplu -->
+        <div class="px-8 py-4 border-b border-slate-100 flex justify-between items-center bg-white/50 backdrop-blur-sm z-10">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white">
+                    <i class="fa-solid fa-layer-group text-sm"></i>
+                </div>
+                <span class="font-semibold text-slate-800 tracking-tight">Evaluation Portal</span>
+            </div>
+            <div id="user-badge" class="hidden items-center gap-2 text-sm font-medium text-slate-500">
+                <i class="fa-regular fa-circle-user text-lg"></i>
+                <span id="display-name">Candidate</span>
+            </div>
+        </div>
+
+        <!-- ECRAN 1: Logare / Identificare -->
+        <div id="screen-start" class="p-10 sm:p-16 flex-1 flex flex-col items-center justify-center text-center screen-fade">
+            <div class="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mb-6">
+                <i class="fa-solid fa-id-card text-2xl"></i>
+            </div>
+            <h1 class="text-3xl font-bold mb-2 text-slate-800">Candidate Authentication</h1>
+            <p class="text-slate-500 mb-8 max-w-md">Please enter your name to access the available evaluation modules.</p>
+            
+            <div class="w-full max-w-sm space-y-4">
+                <div class="relative">
+                    <input type="text" id="user-name" placeholder="Full Name / Rank" 
+                        class="w-full pl-4 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent font-medium transition-all text-slate-700 placeholder:text-slate-400">
+                </div>
+                
+                <button onclick="loginUser()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-xl transition-all shadow-sm shadow-blue-600/20">
+                    Access Portal
+                </button>
+            </div>
+        </div>
+
+        <!-- ECRAN 2: Meniu Dashboard -->
+        <div id="screen-menu" class="hidden flex-1 p-8 sm:p-12 screen-fade bg-slate-50/50">
+            <div class="mb-8">
+                <h2 class="text-2xl font-bold text-slate-800">Evaluation Modules</h2>
+                <p class="text-slate-500 mt-1">Select a module from the list below to begin the examination.</p>
+            </div>
+
+            <div id="quiz-list" class="grid grid-cols-1 gap-4">
+                <!-- Cardurile pentru quiz-uri vor fi injectate aici prin JS -->
+            </div>
+        </div>
+
+        <!-- ECRAN 3: Quiz Activ -->
+        <div id="screen-quiz" class="hidden flex-1 flex flex-col screen-fade">
+            <!-- Header Quiz -->
+            <div class="bg-slate-50 px-8 py-5 border-b border-slate-100 flex justify-between items-end">
+                <div>
+                    <span id="category-badge" class="text-[11px] font-bold uppercase tracking-wider text-blue-600 bg-blue-100 px-2 py-1 rounded-md mb-2 inline-block">Category</span>
+                    <h2 id="current-quiz-title" class="text-lg font-bold text-slate-800">Quiz Title</h2>
+                </div>
+                <div class="text-right">
+                    <div class="text-slate-500 text-sm font-medium flex items-center gap-2 justify-end mb-1">
+                        <i class="fa-regular fa-clock"></i> <span id="timer">00:00</span>
+                    </div>
+                    <div class="text-sm font-semibold text-slate-700" id="question-counter">Question 1 of 10</div>
+                </div>
+            </div>
+
+            <!-- Bară Progres -->
+            <div class="h-1 bg-slate-100 w-full">
+                <div id="progress" class="h-full bg-blue-600 progress-fill" style="width: 0%"></div>
+            </div>
+            
+            <!-- Conținut Întrebare -->
+            <div class="p-8 sm:p-12 max-w-3xl mx-auto w-full flex-1 flex flex-col justify-center">
+                <h3 id="question-text" class="text-xl sm:text-2xl font-semibold mb-8 text-slate-800 leading-snug">...</h3>
+                
+                <div id="options-container" class="space-y-3">
+                    <!-- Opțiunile se injectează aici -->
+                </div>
+            </div>
+        </div>
+
+        <!-- ECRAN 4: Rezultate -->
+        <div id="screen-result" class="hidden flex-1 p-10 sm:p-16 flex flex-col items-center justify-center text-center screen-fade">
+            <div id="result-icon-container" class="w-20 h-20 rounded-2xl flex items-center justify-center mb-6">
+                <i id="result-icon" class="text-3xl"></i>
+            </div>
+            
+            <h2 id="result-status" class="text-3xl font-bold mb-2">...</h2>
+            <p id="result-desc" class="text-slate-500 mb-10">The evaluation has been completed and the results have been recorded.</p>
+            
+            <div class="grid grid-cols-2 gap-4 w-full max-w-md mb-10">
+                <div class="bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                    <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Score</p>
+                    <div class="text-3xl font-bold text-slate-800"><span id="score-display">0</span> <span class="text-lg text-slate-400 font-medium">/ <span id="total-display">10</span></span></div>
+                </div>
+                <div class="bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                    <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Success Rate</p>
+                    <div class="text-3xl font-bold text-slate-800"><span id="percent-display">0</span>%</div>
+                </div>
+            </div>
+
+            <button onclick="returnToMenu()" class="bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-medium py-3 px-8 rounded-xl transition-all shadow-sm">
+                Back to Menu
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // --- DATELE EXAMENELOR (QUIZ-URI) ---
+        // Păstrăm DOAR OCS Penal Code conform cerințelor tale
+        const QUIZZES = {
+            'ocs_penal_code': {
+                title: "OCS Penal Code",
+                description: "Disciplinary actions, strikes, and consequence management.",
+                icon: "fa-gavel",
+                colorClass: "text-red-600 bg-red-50 border-red-100",
+                questions: [
+                    { q: "What happens to a 2LT or 1LT upon receiving a Third Strike?", options: ["Demotion to Warrant Officer", "Immediate Ban from the server", "Removal from Officer Corps (can reapply in 90 days)", "Suspension for 30 days"], correct: 2, cat: "Strikes" },
+                    { q: "How long does a First Strike (Warning) stay active before it expires?", options: ["15 days", "30 days", "60 days", "It never expires"], correct: 1, cat: "Strikes" },
+                    { q: "What is the restriction regarding pinging for patrols?", options: ["Maximum 3 times per hour", "Maximum twice within 30 minutes", "Only once per day", "No restriction"], correct: 1, cat: "Violations" },
+                    { q: "Which of the following is strictly prohibited regarding Admin Commands?", options: ["Using commands during an official raid", "Using :h or :m to talk/communicate with people", "Using admin to organize a training", "Bringing players to spawn"], correct: 1, cat: "Admin Abuse" },
+                    { q: "What constitutes 'Stealing of assets' under Special Infractions?", options: ["Using loopholes in regulations", "Taking screenshots of internal chats", "Unlawfully possessing RIC t-shirts, templates, or maps", "Refusing a lawful order"], correct: 2, cat: "Special Infractions" },
+                    { q: "Who has the primary authority and jurisdiction to place and execute any warrant for Abuse of Authority (AoA)?", options: ["Any Major", "The Academy Head", "MP/Com.B", "Only the General"], correct: 2, cat: "Authority" },
+                    { q: "What is the consequence of 'Using loopholes in regulations to your advantage'?", options: ["A verbal warning", "Strike or Dismissal [S/D]", "Temporary suspension", "Demotion without strikes"], correct: 1, cat: "Violations" },
+                    { q: "Who is authorized to call for a suspension of an officer?", options: ["Only the Sr. Academy Head (or Jr. AH with permission)", "Any member of High Command", "Divisional Commanders", "Military Police"], correct: 0, cat: "Suspension" }
+                ]
+            }
+        };
+
+        // --- STAREA APLICAȚIEI ---
+        let state = {
+            userName: "",
+            currentQuizId: null,
+            currentQuestionIndex: 0,
+            score: 0,
+            startTime: null,
+            timerInterval: null,
+            isLocked: false,
+            shuffledQuestions: [] // Stocăm întrebările amestecate aici
+        };
+
+        // --- FUNCȚII UTILITARE PENTRU AMESTECARE ---
+        // Algoritm Fisher-Yates pentru a amesteca un array
+        function shuffleArray(array) {
+            let currentIndex = array.length, randomIndex;
+            
+            while (currentIndex !== 0) {
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+                
+                [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+            }
+            return array;
+        }
+
+        // --- FUNCȚII PRINCIPALE ---
+
+        // 1. Logare Utilizator
+        function loginUser() {
+            const nameInput = document.getElementById('user-name').value.trim();
+            if(!nameInput) {
+                alert("Please enter your name/rank to continue.");
+                return;
+            }
+            
+            state.userName = nameInput;
+            document.getElementById('display-name').innerText = state.userName;
+            document.getElementById('user-badge').classList.remove('hidden');
+            document.getElementById('user-badge').classList.add('flex');
+            
+            // Verificăm dacă există un link direct către un quiz (URL parameter: ?quiz=...)
+            const urlParams = new URLSearchParams(window.location.search);
+            let directQuizId = urlParams.get('quiz');
+
+            // Fiindcă e singurul modul, dacă nu e specificat niciunul în URL, îl forțăm pe acesta pentru comoditate
+            if(!directQuizId || !QUIZZES[directQuizId]) {
+                directQuizId = 'ocs_penal_code';
+            }
+
+            // Pornim quiz-ul direct, trecând peste meniul de dashboard 
+            // (din moment ce avem un singur quiz, e mai fluid UX-ul așa)
+            startQuiz(directQuizId);
+        }
+
+        // 2. Generare Meniu Dashboard (Păstrat în caz că decizi să mai adaugi în viitor)
+        function renderMenu() {
+            const container = document.getElementById('quiz-list');
+            container.innerHTML = '';
+
+            for (const [id, quiz] of Object.entries(QUIZZES)) {
+                const card = document.createElement('div');
+                card.className = "bg-white border border-slate-200 rounded-2xl p-6 hover:shadow-lg transition-shadow cursor-pointer flex flex-col h-full relative overflow-hidden group";
+                card.onclick = () => startQuiz(id);
+                
+                card.innerHTML = `
+                    <div class="w-12 h-12 rounded-xl flex items-center justify-center mb-4 ${quiz.colorClass}">
+                        <i class="fa-solid ${quiz.icon} text-xl"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-800 mb-2">${quiz.title}</h3>
+                    <p class="text-sm text-slate-500 mb-6 flex-1">${quiz.description}</p>
+                    <div class="flex items-center text-sm font-semibold text-blue-600 group-hover:text-blue-700">
+                        Start Evaluation <i class="fa-solid fa-arrow-right ml-2 transition-transform group-hover:translate-x-1"></i>
+                    </div>
+                `;
+                container.appendChild(card);
+            }
+        }
+
+        // 3. Pornire Quiz Specific
+        function startQuiz(quizId) {
+            state.currentQuizId = quizId;
+            state.currentQuestionIndex = 0;
+            state.score = 0;
+            state.startTime = Date.now();
+            
+            const quiz = QUIZZES[quizId];
+            document.getElementById('current-quiz-title').innerText = quiz.title;
+            
+            // Pregătim datele: amestecăm întrebările și răspunsurile
+            prepareQuizData(quizId);
+
+            showScreen('screen-quiz');
+            renderQuestion();
+            startTimer();
+        }
+
+        // Funcție nouă: Amestecă întrebările și răspunsurile pentru a crea o copie unică
+        function prepareQuizData(quizId) {
+            const originalQuestions = QUIZZES[quizId].questions;
+            state.shuffledQuestions = [];
+
+            // Iterăm prin întrebările originale
+            originalQuestions.forEach(q => {
+                // Creăm o copie a întrebării pentru a nu modifica datele originale
+                let questionCopy = { ...q };
+                
+                // Salvăm textul răspunsului corect
+                let correctOptionText = questionCopy.options[questionCopy.correct];
+                
+                // Creăm o copie a opțiunilor și le amestecăm
+                let shuffledOptions = shuffleArray([...questionCopy.options]);
+                questionCopy.options = shuffledOptions;
+                
+                // Găsim noul index al răspunsului corect în opțiunile amestecate
+                questionCopy.correct = shuffledOptions.indexOf(correctOptionText);
+                
+                state.shuffledQuestions.push(questionCopy);
+            });
+
+            // La final, amestecăm și ordinea întrebărilor
+            shuffleArray(state.shuffledQuestions);
+        }
+
+        // 4. Afișare Întrebare
+        function renderQuestion() {
+            state.isLocked = false;
+            // Folosim întrebările amestecate
+            const q = state.shuffledQuestions[state.currentQuestionIndex];
+            
+            document.getElementById('question-text').innerText = q.q;
+            document.getElementById('question-counter').innerText = `Question ${state.currentQuestionIndex + 1} of ${state.shuffledQuestions.length}`;
+            document.getElementById('category-badge').innerText = q.cat;
+            
+            // Calcul progres bară
+            const progressPct = ((state.currentQuestionIndex) / state.shuffledQuestions.length) * 100;
+            document.getElementById('progress').style.width = `${progressPct}%`;
+            
+            const container = document.getElementById('options-container');
+            container.innerHTML = '';
+            
+            q.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = "option-btn w-full p-4 sm:p-5 text-left bg-white rounded-xl font-medium text-slate-700 flex justify-between items-center group shadow-sm";
+                btn.innerHTML = `<span>${opt}</span> <div class="w-5 h-5 rounded-full border-2 border-slate-200 group-hover:border-blue-400 flex items-center justify-center transition-colors"></div>`;
+                btn.onclick = () => selectOption(idx, btn);
+                container.appendChild(btn);
+            });
+        }
+
+        // 5. Selectare Răspuns
+        function selectOption(idx, btn) {
+            if(state.isLocked) return;
+            state.isLocked = true;
+
+            // Folosim întrebările amestecate pentru a verifica răspunsul corect
+            const q = state.shuffledQuestions[state.currentQuestionIndex];
+            const correct = q.correct;
+            const allBtns = document.querySelectorAll('.option-btn');
+
+            if(idx === correct) {
+                state.score++;
+                btn.classList.add('correct');
+                btn.querySelector('div').innerHTML = '<i class="fa-solid fa-check text-[10px]"></i>';
+                btn.querySelector('div').classList.replace('border-slate-200', 'border-green-600');
+            } else {
+                btn.classList.add('wrong');
+                btn.querySelector('div').innerHTML = '<i class="fa-solid fa-xmark text-[10px]"></i>';
+                btn.querySelector('div').classList.replace('border-slate-200', 'border-red-600');
+                
+                // Arată răspunsul corect
+                allBtns[correct].classList.add('correct');
+                allBtns[correct].querySelector('div').innerHTML = '<i class="fa-solid fa-check text-[10px]"></i>';
+            }
+
+            setTimeout(() => {
+                if(state.currentQuestionIndex < state.shuffledQuestions.length - 1) {
+                    state.currentQuestionIndex++;
+                    renderQuestion();
+                } else {
+                    finishQuiz();
+                }
+            }, 1200);
+        }
+
+        // 6. Finalizare și Salvare
+        function finishQuiz() {
+            clearInterval(state.timerInterval);
+            const totalQs = state.shuffledQuestions.length;
+            const pct = Math.round((state.score / totalQs) * 100);
+            
+            document.getElementById('progress').style.width = "100%";
+            document.getElementById('score-display').innerText = state.score;
+            document.getElementById('total-display').innerText = totalQs;
+            document.getElementById('percent-display').innerText = pct;
+
+            const iconContainer = document.getElementById('result-icon-container');
+            const icon = document.getElementById('result-icon');
+            const status = document.getElementById('result-status');
+            
+            if(pct >= 70) {
+                iconContainer.className = "w-20 h-20 bg-green-100 text-green-600 rounded-2xl flex items-center justify-center mb-6";
+                icon.className = "fa-solid fa-check-double text-3xl";
+                status.innerText = "Passed";
+                status.className = "text-3xl font-bold mb-2 text-green-600";
+            } else {
+                iconContainer.className = "w-20 h-20 bg-red-100 text-red-600 rounded-2xl flex items-center justify-center mb-6";
+                icon.className = "fa-solid fa-triangle-exclamation text-3xl";
+                status.innerText = "Failed";
+                status.className = "text-3xl font-bold mb-2 text-red-600";
+            }
+
+            showScreen('screen-result');
+        }
+
+        // 7. Întoarcere la Meniu / Restart
+        function returnToMenu() {
+            // Cum avem un singur test, butonul "Back to Menu" îl va duce la ecranul de start pentru alt candidat
+            document.getElementById('user-name').value = '';
+            document.getElementById('user-badge').classList.add('hidden');
+            showScreen('screen-start');
+        }
+
+        // --- UTILITARE ---
+        function showScreen(id) {
+            ['screen-start', 'screen-menu', 'screen-quiz', 'screen-result'].forEach(s => {
+                document.getElementById(s).classList.add('hidden');
+            });
+            document.getElementById(id).classList.remove('hidden');
+        }
+
+        function startTimer() {
+            if(state.timerInterval) clearInterval(state.timerInterval);
+            
+            state.timerInterval = setInterval(() => {
+                const diff = Math.floor((Date.now() - state.startTime) / 1000);
+                const m = Math.floor(diff / 60).toString().padStart(2, '0');
+                const s = (diff % 60).toString().padStart(2, '0');
+                document.getElementById('timer').innerText = `${m}:${s}`;
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
