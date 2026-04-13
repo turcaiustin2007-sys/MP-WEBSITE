@@ -116,7 +116,7 @@ export default async function handler(req, res) {
         for (const g of groupsData.data) {
             // Grup RIC: WO = rank 87 sau mai mare
             if (g.group.id === RIC_GROUP_ID) {
-                if (g.role.rank === 87) isWO = true;
+                if (g.role.rank === 175) isWO = true;
             }
 
             // Grup Staff OCS
