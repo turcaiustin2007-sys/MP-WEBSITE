@@ -1,6 +1,10 @@
 import admin from 'firebase-admin';
 import jwt   from 'jsonwebtoken';
 
+/**
+ * Inițializare Firebase Admin SDK
+ * Se asigură că aplicația nu este inițializată de mai multe ori în mediul serverless (Vercel).
+ */
 if (!admin.apps.length) {
     admin.initializeApp({
         credential: admin.credential.cert({
@@ -15,6 +19,9 @@ if (!admin.apps.length) {
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
+/**
+ * Utilitar pentru extragerea cookie-urilor din header
+ */
 function parseCookie(header, name) {
     if (!header) return null;
     const match = header.match(new RegExp(`(?:^|;\\s*)${name}=([^;]+)`));
@@ -24,22 +31,25 @@ function parseCookie(header, name) {
 export default async function handler(req, res) {
     const { code, state } = req.query;
 
-    // ── 1. Validare CSRF state ────────────────────────────────────────────────
+    // ── 1. VALIDARE CSRF STATE ────────────────────────────────────────────────
     const cookieState = parseCookie(req.headers.cookie, 'oauth_state');
     res.setHeader('Set-Cookie', 'oauth_state=; HttpOnly; Secure; SameSite=Lax; Max-Age=0; Path=/');
 
     if (!cookieState || !state || cookieState !== state || !state.startsWith('ocs_')) {
-        console.warn('State mismatch:', { cookieState, queryState: state });
+        console.warn('[AUTH] State mismatch detected:', { cookieState, queryState: state });
         return res.redirect('/?error=invalid_state');
     }
 
-    if (!code) return res.redirect('/?error=auth_failed');
+    if (!code) {
+        console.error('[AUTH] No authorization code provided by Roblox');
+        return res.redirect('/?error=auth_failed');
+    }
 
     const clientId     = process.env.ROBLOX_CLIENT_ID;
     const clientSecret = process.env.ROBLOX_CLIENT_SECRET;
 
     if (!clientId || !clientSecret || !JWT_SECRET) {
-        console.error('FATAL: Missing env vars');
+        console.error('FATAL: Missing environment variables');
         return res.redirect('/?error=server_config_error');
     }
 
@@ -48,7 +58,7 @@ export default async function handler(req, res) {
     const redirectUri = `${protocol}://${host}/api/callback`;
 
     try {
-        // ── 2. Token Roblox ───────────────────────────────────────────────────
+        // ── 2. SCHIMBĂ CODUL PENTRU TOKEN ROBLOX ─────────────────────────────
         const tokenRes = await fetch('https://apis.roblox.com/oauth/v1/token', {
             method:  'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -60,118 +70,112 @@ export default async function handler(req, res) {
                 redirect_uri:  redirectUri
             })
         });
+        
         const tokenData = await tokenRes.json();
         if (!tokenRes.ok) {
-            console.error('Roblox token error:', tokenData);
+            console.error('[ROBLOX] Token exchange failed:', tokenData);
             throw new Error('Token Roblox failed');
         }
 
-        // ── 3. UserInfo ───────────────────────────────────────────────────────
+        // ── 3. PREIA DATELE UTILIZATORULUI ──────────────────────────────────
         const userRes  = await fetch('https://apis.roblox.com/oauth/v1/userinfo', {
             headers: { Authorization: `Bearer ${tokenData.access_token}` }
         });
         const userData = await userRes.json();
         if (!userRes.ok) throw new Error('UserInfo Roblox failed');
 
-        // ── 4. Verificare grupuri ─────────────────────────────────────────────
-        //
-        //  Grup 254403   (RIC principal)
-        //    rank >= 87  → Warrant Officer — poate da examen
-        //
-        //  Grup 811677186  (Staff OCS)
-        //  Grup 811677186  (Staff OCS)
-        //    rank 10     → Instructor (isInstructor) — Officer Registry only
-        //    rank 15     → Interviewer (isAdmin)
-        //    rank >= 254 → Academy Head (isHighCommand)
-        //
-        //  Grup 747852578  (Developeri)
-        //    rank 255    → Developer (toate drepturile)
+        // ── 4. CONFIGURARE GRUP ȘI RANGURI ──────────────────────────────────
+        const MP_GROUP_ID  = 328843; 
+        const DEV_GROUP_ID = 747852578;
 
-        const RIC_GROUP_ID   = 254403;
-        const STAFF_GROUP_ID = 811677186;
-        const DEV_GROUP_ID   = 747852578;
+        // Gradele care pot da EXAMENUL (CANDIDAȚI)
+        const MP_ELIGIBLE_EXAM_RANKS = [50, 100, 150]; 
 
-        let isWO          = false;
-        let isInstructor  = false;
-        let isAdmin       = false;
-        let isHighCommand = false;
-        let isDeveloper   = false;
+        // Definire permisiuni (Instructor a fost eliminat)
+        let isEligibleCandidate = false;
+        let isAdmin             = false;
+        let isHighCommand       = false;
+        let isDeveloper         = false;
 
         const groupsRes = await fetch(
             `https://groups.roblox.com/v1/users/${userData.sub}/groups/roles`,
             { headers: { Authorization: `Bearer ${tokenData.access_token}` } }
         );
+        
         if (!groupsRes.ok) {
-            console.warn('Groups API non-OK');
+            console.error('[ROBLOX] Groups API error');
             return res.redirect('/?error=group_check_failed');
         }
 
         const groupsData = await groupsRes.json();
 
-        // LOG pentru debug în Vercel Logs
-        console.log(`[callback] ${userData.preferred_username} | groups:`,
-            groupsData.data.map(g => `${g.group.id}:rank${g.role.rank}`).join(' | ')
-        );
-
         for (const g of groupsData.data) {
-            // Grup RIC: WO = rank 87 sau mai mare
-            if (g.group.id === RIC_GROUP_ID) {
-                if (g.role.rank === 175) isWO = true;
+            if (g.group.id === MP_GROUP_ID) {
+                const rank = g.role.rank;
+
+                // Verificare Candidat
+                if (MP_ELIGIBLE_EXAM_RANKS.includes(rank)) {
+                    isEligibleCandidate = true;
+                }
+
+                // Verificare Staff MP (fără instructor)
+                if (rank >= 240) {
+                    isAdmin = true;
+                    isHighCommand = true;
+                }
             }
 
-            // Grup Staff OCS
-            if (g.group.id === STAFF_GROUP_ID) {
-                if (g.role.rank >= 10)  isInstructor  = true;
-                if (g.role.rank >= 15)  isAdmin       = true;
-                if (g.role.rank >= 254) isHighCommand = true;
-            }
-
-            // Grup dev: rank exact 255
+            // Verificare Grup Developer
             if (g.group.id === DEV_GROUP_ID && g.role.rank >= 255) {
-                isDeveloper   = true;
-                isAdmin       = true;
-                isHighCommand = true;
-                isInstructor  = true;
-                isWO          = true;
+                isDeveloper         = true;
+                isAdmin             = true;
+                isHighCommand       = true;
+                isEligibleCandidate = true;
             }
         }
 
-        console.log(`[callback] ${userData.preferred_username} | isWO:${isWO} isInstructor:${isInstructor} isAdmin:${isAdmin} isHighCommand:${isHighCommand} isDeveloper:${isDeveloper}`);
-
-        // ── 5. Firebase Custom Token (admini + instructors) ───────────────────
+        // ── 5. FIREBASE CUSTOM TOKEN (PENTRU ADMINI) ─────────────────────────
         let firebaseToken = null;
-        if (isAdmin || isInstructor || isDeveloper) {
+        if (isAdmin || isDeveloper) {
             try {
                 firebaseToken = await admin.auth().createCustomToken(String(userData.sub), {
-                    admin: isAdmin, highCommand: isHighCommand, developer: isDeveloper, instructor: isInstructor
+                    admin: isAdmin, 
+                    highCommand: isHighCommand, 
+                    developer: isDeveloper
                 });
-            } catch(e) { console.error('Firebase token error:', e); }
+            } catch(e) { 
+                console.error('[FIREBASE] Error creating custom token:', e); 
+            }
         }
 
-        // ── 6. JWT semnat ─────────────────────────────────────────────────────
+        // ── 6. GENERARE JWT PENTRU FRONTEND ──────────────────────────────────
         const jwtPayload = {
             id: userData.sub,
             roblox: userData.preferred_username,
-            isWO, isInstructor, isAdmin, isHighCommand, isDeveloper, firebaseToken
+            isMP: isEligibleCandidate,
+            isAdmin, 
+            isHighCommand, 
+            isDeveloper, 
+            firebaseToken
         };
+
         const token = jwt.sign(jwtPayload, JWT_SECRET, {
             expiresIn: '2h',
             issuer:    'ocs-portal'
         });
 
-        // ── 7. Rutare ─────────────────────────────────────────────────────────
-        if (isAdmin || isInstructor || isDeveloper) {
+        // ── 7. REDIRECȚIONARE FINALĂ ─────────────────────────────────────────
+        if (isAdmin || isDeveloper) {
             res.setHeader('Set-Cookie',
                 `ocs_admin=${encodeURIComponent(token)}; HttpOnly; Secure; SameSite=Lax; Max-Age=7200; Path=/`
             );
             return res.redirect('/api/admin');
         }
 
-        // WO sau fără rang → portal candidat
         return res.redirect(`/?token=${token}`);
 
     } catch(error) {
-        console.error('Callback handler error:', error);
+        console.error('[FATAL] Callback handler error:', error);
         return res.redirect('/?error=server_error');
     }
 }
