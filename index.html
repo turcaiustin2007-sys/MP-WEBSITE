@@ -10,7 +10,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, doc, onSnapshot, getDoc, setDoc, updateDoc, collection, addDoc, query, orderBy, getD } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, doc, onSnapshot, getDoc, setDoc, updateDoc, collection, addDoc, query, orderBy, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { getAuth, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
         const firebaseConfig = {
@@ -20,7 +20,7 @@
           storageBucket: "mp-website-4de23.firebasestorage.app",
           messagingSenderId: "985076640347",
           appId: "1:985076640347:web:9170a73ecb4aa8d656ad7e"
-};
+        };
 
 
         const app  = initializeApp(firebaseConfig);
@@ -39,7 +39,7 @@
         window.firebaseSignIn     = signInWithCustomToken;
         window.firebaseQuery      = query;
         window.firebaseOrderBy    = orderBy;
-        window.firebaseGetD    = getD;
+        window.firebaseGetDocs    = getDocs;
     </script>
 
     <script>
@@ -307,10 +307,10 @@
     }
 
     // =========================================================================
-    // QUESTION BANK (candidatul primește DOAR întrebările din codul lui)
-    // NU se mai încarcă întreaga bancă de date din cloud
+    // QUESTION BANK
     // =========================================================================
     async function loadQuestionBankFromCloud() {
+        if (!window.firebaseDb || !window.firebaseDoc) return;
         try {
             const docRef  = window.firebaseDoc(window.firebaseDb, "admin_data", "question_bank");
             const dnap = await window.firebaseGetDoc(docRef);
@@ -325,7 +325,7 @@
     // CCTV (live log)
     // =========================================================================
     async function sendLiveLog(actionType, messageStr) {
-        if (!appState.currentAccessCode || !candidateData.roblox) return;
+        if (!appState.currentAccessCode || !candidateData.roblox || !window.firebaseAddDoc) return;
         try {
             const now        = new Date();
             const expireDate = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
@@ -347,7 +347,7 @@
     function handleConnectionLost(reason = "Connection lost. Session revoked.") {
         if (isKickTriggered) return;
         isKickTriggered = true;
-        if (appState.currentAccessCode) {
+        if (appState.currentAccessCode && window.firebaseUpdateDoc) {
             try {
                 window.firebaseUpdateDoc(
                     window.firebaseDoc(window.firebaseDb, "access_codes", appState.currentAccessCode),
@@ -358,7 +358,7 @@
         triggerSecurityKick(reason);
     }
 
-async function performPing() {
+    async function performPing() {
         const isTesting = localStorage.getItem('ric_test_mode') === 'true';
         if (isKickTriggered || currentSectionIndex === 0 || isTesting) return;
         try {
@@ -371,8 +371,7 @@ async function performPing() {
         } catch { updateConnectionUI(false); }
     }
 
-function startWatchdogSystem() {
-        // Dacă ești în modul de test, oprim pornirea watchdog-ului
+    function startWatchdogSystem() {
         const isTesting = localStorage.getItem('ric_test_mode') === 'true';
         if (watchdogInterval || isTesting) return;
         
@@ -403,18 +402,16 @@ function startWatchdogSystem() {
     });
 
     document.addEventListener("visibilitychange", () => {
-    if (document.hidden && currentSectionIndex > 1 && currentSectionIndex < formSections.length - 1) {
-        tabSwitches++;
-        showToast('Security Alert: Leaving the tab was recorded.', 'error');
-        sendLiveLog('warning', 'ANTI-CHEAT: Candidate left the active tab.');
-    } else if (!document.hidden && currentSectionIndex > 0) {
-        // ADAUGĂ LINIA ASTA: Resetează timer-ul ca să previi kick-ul fals de la throttling
-        lastSuccessfulPing = Date.now(); 
-        
-        if (!navigator.onLine) handleConnectionLost("Network disconnected while in background.");
-        else performPing();
-    }
-});
+        if (document.hidden && currentSectionIndex > 1 && currentSectionIndex < formSections.length - 1) {
+            tabSwitches++;
+            showToast('Security Alert: Leaving the tab was recorded.', 'error');
+            sendLiveLog('warning', 'ANTI-CHEAT: Candidate left the active tab.');
+        } else if (!document.hidden && currentSectionIndex > 0) {
+            lastSuccessfulPing = Date.now(); 
+            if (!navigator.onLine) handleConnectionLost("Network disconnected while in background.");
+            else performPing();
+        }
+    });
 
     window.addEventListener('focus', () => {
         if (currentSectionIndex > 0 && !isKickTriggered) {
@@ -490,7 +487,7 @@ function startWatchdogSystem() {
     }
 
     // =========================================================================
-    // INIT & ROUTING  —  usa ?token= (JWT) în loc de ?auth= (base64)
+    // INIT & ROUTING
     // =========================================================================
     async function initApp() {
         const urlParams    = new URLSearchParams(window.location.search);
@@ -501,7 +498,6 @@ function startWatchdogSystem() {
 
         if (tokenPayload) {
             try {
-                // Validare server-side — browserul nu poate verifica semnătura JWT
                 const res  = await fetch('/api/verify-token', {
                     method:  'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -522,18 +518,17 @@ function startWatchdogSystem() {
                 appState.firebaseToken = decoded.firebaseToken;
                 window.history.replaceState({}, document.title, "/");
 
-                // Dacă e admin și a ajuns cumva pe /, îl trimitem la /admin.html
                 if (decoded.isAdmin || decoded.isHighCommand || decoded.isDeveloper) {
-                window.location.href = `/admin.html?token=${tokenPayload}`;
-                return;
-}
+                    window.location.href = `/admin.html?token=${tokenPayload}`;
+                    return;
+                }
 
                 if (appState.firebaseToken && window.firebaseSignIn) {
                     try { await window.firebaseSignIn(window.firebaseAuth, appState.firebaseToken); } catch(e) {}
                 }
 
-              if (!appState.isWO) {
-                formSections = [{ type: "rejected" }];
+                if (!appState.isWO) {
+                    formSections = [{ type: "rejected" }];
                 } else {            
                     await loadQuestionBankFromCloud();
                     formSections = [{
@@ -553,24 +548,27 @@ function startWatchdogSystem() {
             formSections = [{ type: "login_roblox" }];
         }
 
-        // Portal open/close listener
-        const docRef = window.firebaseDoc(window.firebaseDb, "settings", "portal");
-        window.firebaseOnSnapshot(docRef, (dnap) => {
-            if (dnap.exists() && dnap.data().isOpen === false) {
-                formSections = [{ type: "closed_portal" }];
-                currentSectionIndex = 0;
-                renderSection();
-            } else {
-                renderSection();
-            }
-        }, () => renderSection());
+        if (window.firebaseDoc && window.firebaseDb) {
+            const docRef = window.firebaseDoc(window.firebaseDb, "settings", "portal");
+            window.firebaseOnSnapshot(docRef, (dnap) => {
+                if (dnap.exists() && dnap.data().isOpen === false) {
+                    formSections = [{ type: "closed_portal" }];
+                    currentSectionIndex = 0;
+                    renderSection();
+                } else {
+                    renderSection();
+                }
+            }, () => renderSection());
+        } else {
+            renderSection();
+        }
     }
 
     // =========================================================================
     // STEPPER
     // =========================================================================
     function renderStepper() {
-        if (['login_roblox','rejected','auth_code','closed_portal'].includes(formSections[currentSectionIndex].type)) return '';
+        if (!formSections[currentSectionIndex] || ['login_roblox','rejected','auth_code','closed_portal'].includes(formSections[currentSectionIndex].type)) return '';
         const offset    = formSections.findIndex(s => !['login_roblox','rejected','auth_code','closed_portal'].includes(s.type));
         const stepIndex = currentSectionIndex - offset;
         const steps     = formSections.filter(s => !['login_roblox','rejected','auth_code','closed_portal'].includes(s.type));
@@ -598,6 +596,7 @@ function startWatchdogSystem() {
     // =========================================================================
     function renderSection() {
         const section = formSections[currentSectionIndex];
+        if (!section) return;
         let html = renderStepper() + `<div class="p-5 sm:p-8 md:p-12 flex-grow flex flex-col fade-enter relative z-10 bg-slate-50/30 pb-28 md:pb-8">`;
 
         if (section.type === 'closed_portal') {
@@ -607,7 +606,6 @@ function startWatchdogSystem() {
                 <h1 class="text-3xl sm:text-4xl font-extrabold text-corporate-900 mb-4 sm:mb-6 tracking-tight">PORTAL CLOSED</h1>
                 <div class="bg-red-50 border border-red-200 p-4 sm:p-5 rounded-xl text-center mb-8"><p class="text-red-800 text-xs sm:text-sm font-medium leading-relaxed">Recruitment sessions are currently closed. Please wait for the next official session.</p></div>
             </div>`;
-
         } else if (section.type === 'login_roblox') {
             html += `<div class="text-center my-auto w-full max-w-md mx-auto px-2">
                 <div class="w-24 h-24 sm:w-28 sm:h-28 bg-white rounded-3xl flex items-center justify-center mx-auto mb-6 sm:mb-8 shadow-xl overflow-hidden border-4 border-corporate-100">
@@ -625,7 +623,6 @@ function startWatchdogSystem() {
                     </button>
                 </div>
             </div>`;
-
         } else if (section.type === 'rejected') {
             html += `<div class="text-center my-auto w-full max-w-md mx-auto">
                 <div class="w-20 h-20 sm:w-24 sm:h-24 bg-red-100 rounded-3xl flex items-center justify-center mx-auto mb-6 sm:mb-8 shadow-inner border border-red-200"><i class="fa-solid fa-hand-paper text-red-500 text-3xl sm:text-4xl"></i></div>
@@ -636,7 +633,6 @@ function startWatchdogSystem() {
                 </div>
                 <button onclick="window.location.href='/'" class="w-full bg-corporate-100 hover:bg-corporate-200 text-corporate-800 font-bold py-3.5 sm:py-4 rounded-xl transition-all text-base sm:text-lg">Return to Main Page</button>
             </div>`;
-
         } else if (section.type === 'auth_code') {
             html += `<div class="text-center my-auto w-full max-w-md mx-auto">
                 <div class="w-20 h-20 sm:w-24 sm:h-24 bg-white rounded-3xl flex items-center justify-center mx-auto mb-6 sm:mb-8 shadow-xl overflow-hidden border-4 border-corporate-100">
@@ -651,7 +647,6 @@ function startWatchdogSystem() {
                     ${section.buttonText} <i class="fa-solid fa-unlock ml-3"></i>
                 </button>
             </div>`;
-
         } else if (section.type === 'profile_review') {
             html += `
                 <div class="mb-6 sm:mb-8 pb-4 sm:pb-5 border-b border-corporate-200">
@@ -695,7 +690,6 @@ function startWatchdogSystem() {
                         Accept & Begin <i class="fa-solid fa-arrow-right ml-3"></i>
                     </button>
                 </div>`;
-
         } else if (section.type === 'review') {
             html += `
                 <div class="mb-6 sm:mb-8 pb-4 sm:pb-5 border-b border-corporate-200">
@@ -737,7 +731,6 @@ function startWatchdogSystem() {
                         Submit Exam <i class="fa-solid fa-satellite-dish ml-2 sm:ml-3"></i>
                     </button>
                 </div>`;
-
         } else {
             html += `
                 <div class="mb-6 sm:mb-10 pb-4 sm:pb-5 border-b border-corporate-200">
@@ -812,6 +805,7 @@ function startWatchdogSystem() {
         btn.classList.add('opacity-70', 'cursor-not-allowed');
 
         try {
+            if (!window.firebaseDb || !window.firebaseDoc) throw new Error("Firebase not initialized.");
             const docRef  = window.firebaseDoc(window.firebaseDb, "access_codes", code);
             const dnap = await window.firebaseGetDoc(docRef);
             if (!dnap.exists()) throw new Error("Code not found in the secure database.");
@@ -826,7 +820,6 @@ function startWatchdogSystem() {
             appState.currentAccessCode = code;
             candidateData = { discord: data.discord, roblox: data.roblox, id: data.rbxId || '', questions: data.questions || [] };
 
-            // Real-time revoke listener
             if (codeRevokeListener) codeRevokeListener();
             codeRevokeListener = window.firebaseOnSnapshot(docRef, (snap) => {
                 if ((!snap.exists() || snap.data().status === 'revoked') && currentSectionIndex > 0) {
@@ -855,10 +848,14 @@ function startWatchdogSystem() {
     function showAuthError(msg = "Invalid code.") {
         const err   = document.getElementById('auth-error');
         const input = document.getElementById('access-code-input');
-        err.innerHTML = `<i class="fa-solid fa-circle-exclamation mr-1.5"></i> ${msg}`;
-        err.classList.remove('hidden');
-        input.classList.add('border-red-400', 'bg-red-50/50');
-        input.style.boxShadow = '0 0 0 4px rgba(239,68,68,0.15)';
+        if (err) {
+            err.innerHTML = `<i class="fa-solid fa-circle-exclamation mr-1.5"></i> ${msg}`;
+            err.classList.remove('hidden');
+        }
+        if (input) {
+            input.classList.add('border-red-400', 'bg-red-50/50');
+            input.style.boxShadow = '0 0 0 4px rgba(239,68,68,0.15)';
+        }
     }
 
     function buildDynamicForm(questionIds) {
@@ -882,14 +879,17 @@ function startWatchdogSystem() {
             const el   = document.getElementById(`input-${id}`);
             const err  = document.getElementById(`error-${id}`);
             const card = document.getElementById(`card-${id}`);
+            if (!el) return;
             const val  = el.value.trim();
             if (!val) {
-                isValid = false; err.classList.remove('hidden');
+                isValid = false; 
+                if (err) err.classList.remove('hidden');
                 el.classList.add('border-red-400', 'bg-red-50/50');
                 el.style.boxShadow = '0 0 0 4px rgba(239,68,68,0.15)';
-                card.classList.add('error-shake'); setTimeout(() => card.classList.remove('error-shake'), 400);
+                if (card) { card.classList.add('error-shake'); setTimeout(() => card.classList.remove('error-shake'), 400); }
             } else {
-                answers[id] = val; err.classList.add('hidden');
+                answers[id] = val; 
+                if (err) err.classList.add('hidden');
                 el.classList.remove('border-red-400', 'bg-red-50/50'); el.style.boxShadow = '';
             }
         };
@@ -911,6 +911,7 @@ function startWatchdogSystem() {
 
     function saveAnswersToObj() {
         const section = formSections[currentSectionIndex];
+        if (!section) return;
         if (section.type === 'questions') {
             section.questions.forEach((_, i) => {
                 const qId = `${section.id}_q${i}`;
@@ -966,6 +967,7 @@ function startWatchdogSystem() {
         });
 
         try {
+            if (!window.firebaseAddDoc) throw new Error("Firebase not loaded.");
             await window.firebaseAddDoc(window.firebaseCollection(window.firebaseDb, "final_submissions"), {
                 discord: candidateData.discord, roblox: appState.robloxName, rbxId: appState.robloxId || 'N/A',
                 timeTaken: timeString, tabSwitches, qaList, timestamp: new Date().toISOString()
