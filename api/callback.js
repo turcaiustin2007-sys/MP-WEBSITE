@@ -96,8 +96,9 @@ export default async function handler(req, res) {
             if (g.group.id === MP_GROUP_ID) {
                 const rank = g.role.rank;
                 if ([50, 100, 150].includes(rank)) isEligible    = true;
-                if (rank === 250)                   isAdmin       = true;
-                if (rank === 240)                  { isAdmin = true; isHighCommand = true; }
+                if (rank >= 240) {
+                    isAdmin = true;
+                    isHighCommand = true;
             }
         }
 
