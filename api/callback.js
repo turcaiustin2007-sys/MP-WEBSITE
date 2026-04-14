@@ -74,7 +74,7 @@ export default async function handler(req, res) {
         //    rank 240           → isAdmin  (MP CPT — examiner)
         //    rank 250           → isHighCommand (MP COM — academy head)
 
-        const MP_GROUP_ID = 747852578;
+        const MP_GROUP_ID = 254403;
 
         let isEligible    = false;
         let isAdmin       = false;
@@ -95,7 +95,7 @@ export default async function handler(req, res) {
         for (const g of groupsData.data) {
             if (g.group.id === MP_GROUP_ID) {
                 const rank = g.role.rank;
-                if ([50, 100, 150].includes(rank)) isEligible    = true;
+                if ([50, 100, 125].includes(rank)) isEligible    = true;
                 if (rank >= 255) {
                     isAdmin = true;
                     isHighCommand = true;
