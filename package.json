@@ -1,7 +1,7 @@
 {
-  "name": "mp-website-4de23",
+  "name": "mp-exam-portal",
   "version": "1.0.0",
-  "description": "OCS Candidate Portal",
+  "description": "Military Police Examination Portal",
   "main": "index.html",
   "type": "module",
   "dependencies": {
