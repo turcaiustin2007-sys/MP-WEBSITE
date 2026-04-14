@@ -3,25 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RIC Exam Portal</title>
+    <title>MP Examination Portal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, doc, onSnapshot, getDoc, setDoc, updateDoc, collection, addDoc, query, orderBy, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, doc, onSnapshot, getDoc, setDoc, updateDoc, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
         import { getAuth, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
         const firebaseConfig = {
-          apiKey: "AIzaSyB5cfzF0ZtshRecPwGPigbVFEkMuGbD0kw",
-          authDomain: "mp-website-4de23.firebaseapp.com",
-          projectId: "mp-website-4de23",
-          storageBucket: "mp-website-4de23.firebasestorage.app",
-          messagingSenderId: "985076640347",
-          appId: "1:985076640347:web:9170a73ecb4aa8d656ad7e"
+            apiKey:            "AIzaSyDT5gU75wgs80PsEbD8nLEYyXeBI7a07U0",
+            authDomain:        "ocs-interview.firebaseapp.com",
+            projectId:         "ocs-interview",
+            storageBucket:     "ocs-interview.firebasestorage.app",
+            messagingSenderId: "389433468726",
+            appId:             "1:389433468726:web:d35ddfc932806721ccb597"
         };
-
 
         const app  = initializeApp(firebaseConfig);
         const db   = getFirestore(app);
@@ -37,8 +36,6 @@
         window.firebaseCollection = collection;
         window.firebaseAddDoc     = addDoc;
         window.firebaseSignIn     = signInWithCustomToken;
-        window.firebaseQuery      = query;
-        window.firebaseOrderBy    = orderBy;
         window.firebaseGetDocs    = getDocs;
     </script>
 
@@ -50,9 +47,10 @@
                     fontFamily: { sans: ['Inter', 'sans-serif'] },
                     colors: {
                         corporate: {
-                            50: '#f8fafc', 100: '#f1f5f9', 200: '#e2e8f0', 300: '#cbd5e1', 400: '#94a3b8',
-                            500: '#64748b', 600: '#475569', 700: '#334155', 800: '#1e293b', 900: '#0f172a',
-                            primary: '#2563eb', primaryHover: '#1d4ed8',
+                            50: '#f8fafc', 100: '#f1f5f9', 200: '#e2e8f0', 300: '#cbd5e1',
+                            400: '#94a3b8', 500: '#64748b', 600: '#475569', 700: '#334155',
+                            800: '#1e293b', 900: '#0f172a',
+                            primary: '#1d4ed8', primaryHover: '#1e40af',
                         }
                     },
                     boxShadow: { 'premium': '0 10px 40px -10px rgba(0,0,0,0.08)' }
@@ -62,12 +60,10 @@
     </script>
 
     <script>
-        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        if (localStorage.getItem('theme') === 'dark' ||
+            (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             document.documentElement.classList.add('dark');
-        } else {
-            document.documentElement.classList.remove('dark');
         }
-
         function toggleTheme() {
             const html = document.documentElement;
             const icon = document.getElementById('theme-icon');
@@ -79,90 +75,64 @@
                 if (icon) icon.className = 'fa-solid fa-sun text-lg sm:text-xl';
             }
         }
-
         window.addEventListener('DOMContentLoaded', () => {
             const icon = document.getElementById('theme-icon');
-            if (document.documentElement.classList.contains('dark') && icon) {
+            if (document.documentElement.classList.contains('dark') && icon)
                 icon.className = 'fa-solid fa-sun text-lg sm:text-xl';
-            }
         });
     </script>
 
     <style>
-        body {
-            background-color: #f8fafc;
-            background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
-            background-size: 32px 32px;
-            color: #0f172a;
-            min-height: 100vh;
-            -webkit-font-smoothing: antialiased;
-            overscroll-behavior-y: none;
-            transition: background-color 0.3s ease, color 0.3s ease;
-        }
-        .no-select { -webkit-user-select: none; -ms-user-select: none; user-select: none; }
-        .fade-enter { animation: slideFadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-        .fade-enter-delayed { opacity: 0; animation: slideFadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.1s forwards; }
-        @keyframes slideFadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-        .input-field { transition: all 0.3s ease; background-color: #f1f5f9; border: 1px solid #e2e8f0; }
-        .input-field:hover { background-color: #f8fafc; }
-        .input-field:focus { background-color: #ffffff; border-color: #3b82f6; box-shadow: 0 0 0 4px rgba(59,130,246,0.1); outline: none; }
-        .input-field:disabled { background-color: #e2e8f0; cursor: not-allowed; opacity: 0.7; }
-        .question-card { transition: all 0.3s; border: 1px solid #f1f5f9; background: #ffffff; border-radius: 1rem; }
-        .question-card:focus-within { border-color: #bfdbfe; transform: translateY(-2px); box-shadow: 0 10px 30px -10px rgba(37,99,235,0.15); }
-        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-4px); } 75% { transform: translateX(4px); } }
-        .error-shake { animation: shake 0.4s ease-in-out; }
-
-        #toast-container { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); z-index: 99999; display: flex; flex-direction: column; gap: 8px; pointer-events: none; width: 90%; max-width: 400px; }
-        .toast { background: rgba(15,23,42,0.95); backdrop-filter: blur(8px); color: white; padding: 12px 20px; border-radius: 99px; font-size: 13px; font-weight: 600; box-shadow: 0 10px 25px rgba(0,0,0,0.2); animation: slideUpFade 0.3s ease forwards, fadeOut 0.3s ease 2.7s forwards; display: flex; align-items: center; gap: 10px; border: 1px solid rgba(255,255,255,0.1); width: 100%; justify-content: center; }
-        .toast-error   { border-color: rgba(239,68,68,0.5);  color: #fca5a5; }
-        .toast-success { border-color: rgba(16,185,129,0.5); color: #6ee7b7; }
-        @keyframes slideUpFade { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes fadeOut     { from { opacity: 1; transform: translateY(0); }  to { opacity: 0; transform: translateY(-10px); } }
-        .btn-disabled { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
-
-        /* DARK MODE */
-        .dark body { background-color: #050505; background-image: radial-gradient(#2e1065 1px, transparent 1px); color: #ffffff; }
-        .dark .bg-white { background-color: #0a0a0c !important; border-color: #3b0764 !important; box-shadow: 0 4px 30px -5px rgba(107,33,168,0.15) !important; }
-        .dark .bg-white\/95 { background-color: rgba(10,10,12,0.95) !important; border-color: #3b0764 !important; }
-        .dark .bg-slate-50, .dark .bg-corporate-50, .dark .bg-slate-100, .dark .bg-corporate-100 { background-color: #0f0f13 !important; border-color: #2e1065 !important; }
-        .dark .hover\:bg-corporate-200:hover, .dark .hover\:bg-corporate-100:hover, .dark .hover\:bg-slate-100:hover { background-color: #1a1025 !important; }
-        .dark .bg-corporate-200 { background-color: #1a1025 !important; }
-        .dark .bg-slate-900 { background-color: #1e0a3c !important; border: 1px solid #581c87 !important; }
-        .dark .bg-corporate-900 { background-color: #2e1065 !important; border-color: #4c1d95 !important; }
-        .dark .hover\:bg-black:hover { background-color: #3b0764 !important; }
-        .dark .text-corporate-900, .dark .text-corporate-800, .dark .text-slate-900 { color: #ffffff !important; }
-        .dark .text-corporate-700, .dark .text-corporate-600 { color: #e2e8f0 !important; }
-        .dark .text-corporate-500, .dark .text-corporate-400 { color: #94a3b8 !important; }
-        .dark .text-corporate-300 { color: #cbd5e1 !important; }
-        .dark .text-corporate-primary { color: #c084fc !important; }
-        .dark .border-corporate-200, .dark .border-corporate-100, .dark .border-slate-200, .dark .border-slate-300 { border-color: #3b0764 !important; }
-        .dark .border-corporate-700 { border-color: #4c1d95 !important; }
-        .dark .input-field { background-color: #050505 !important; border-color: #3b0764 !important; color: #ffffff !important; }
-        .dark .input-field:focus { border-color: #9333ea !important; background-color: #0a0a0c !important; box-shadow: 0 0 0 4px rgba(147,51,234,0.2) !important; }
-        .dark .question-card { background: #0a0a0c !important; border-color: #2e1065 !important; }
-        .dark .question-card:focus-within { border-color: #a855f7 !important; box-shadow: 0 10px 30px -10px rgba(168,85,247,0.2) !important; }
-        .dark .bg-blue-50, .dark .bg-indigo-50 { background-color: rgba(147,51,234,0.15) !important; border-color: rgba(147,51,234,0.4) !important; }
-        .dark .text-blue-500, .dark .text-blue-600, .dark .text-blue-700, .dark .text-blue-800, .dark .text-indigo-500, .dark .text-indigo-700, .dark .text-indigo-800 { color: #d8b4fe !important; }
-        .dark .bg-amber-50 { background-color: rgba(245,158,11,0.15) !important; border-color: rgba(245,158,11,0.4) !important; }
-        .dark .text-amber-500, .dark .text-amber-600, .dark .text-amber-800, .dark .text-amber-900 { color: #fde68a !important; }
-        .dark .bg-green-50, .dark .bg-emerald-50, .dark .bg-emerald-100 { background-color: rgba(16,185,129,0.15) !important; border-color: rgba(16,185,129,0.4) !important; }
-        .dark .text-green-500, .dark .text-green-600, .dark .text-green-700, .dark .text-green-800, .dark .text-emerald-500, .dark .text-emerald-600, .dark .text-emerald-700, .dark .text-emerald-800, .dark .text-emerald-900 { color: #6ee7b7 !important; }
-        .dark .bg-red-50, .dark .bg-red-100 { background-color: rgba(239,68,68,0.15) !important; border-color: rgba(239,68,68,0.4) !important; }
-        .dark .text-red-500, .dark .text-red-600, .dark .text-red-700, .dark .text-red-800 { color: #fca5a5 !important; }
+        body { background-color:#f8fafc; background-image:radial-gradient(#cbd5e1 1px,transparent 1px); background-size:32px 32px; color:#0f172a; min-height:100vh; -webkit-font-smoothing:antialiased; overscroll-behavior-y:none; transition:background-color .3s,color .3s; }
+        .no-select { -webkit-user-select:none; user-select:none; }
+        .fade-enter { animation:slideFadeIn .5s cubic-bezier(.16,1,.3,1) forwards; }
+        .fade-enter-delayed { opacity:0; animation:slideFadeIn .5s cubic-bezier(.16,1,.3,1) .1s forwards; }
+        @keyframes slideFadeIn { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+        ::-webkit-scrollbar{width:6px} ::-webkit-scrollbar-track{background:transparent} ::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:10px}
+        .input-field { transition:all .3s; background-color:#f1f5f9; border:1px solid #e2e8f0; }
+        .input-field:focus { background-color:#fff; border-color:#1d4ed8; box-shadow:0 0 0 4px rgba(29,78,216,.1); outline:none; }
+        .question-card { transition:all .3s; border:1px solid #f1f5f9; background:#fff; border-radius:1rem; }
+        .question-card:focus-within { border-color:#bfdbfe; transform:translateY(-2px); box-shadow:0 10px 30px -10px rgba(29,78,216,.15); }
+        @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-4px)} 75%{transform:translateX(4px)} }
+        .error-shake { animation:shake .4s ease-in-out; }
+        #toast-container { position:fixed; bottom:24px; left:50%; transform:translateX(-50%); z-index:99999; display:flex; flex-direction:column; gap:8px; pointer-events:none; width:90%; max-width:400px; }
+        .toast { background:rgba(15,23,42,.95); backdrop-filter:blur(8px); color:#fff; padding:12px 20px; border-radius:99px; font-size:13px; font-weight:600; box-shadow:0 10px 25px rgba(0,0,0,.2); animation:slideUpFade .3s ease forwards,fadeOut .3s ease 2.7s forwards; display:flex; align-items:center; gap:10px; border:1px solid rgba(255,255,255,.1); justify-content:center; }
+        .toast-error   { border-color:rgba(239,68,68,.5);  color:#fca5a5; }
+        .toast-success { border-color:rgba(16,185,129,.5); color:#6ee7b7; }
+        @keyframes slideUpFade { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes fadeOut     { from{opacity:1} to{opacity:0;transform:translateY(-10px)} }
+        .btn-disabled { opacity:.5; cursor:not-allowed; pointer-events:none; }
+        /* Dark mode */
+        .dark body { background-color:#050505; background-image:radial-gradient(#1e3a5f 1px,transparent 1px); color:#fff; }
+        .dark .bg-white { background-color:#07101c !important; border-color:#1e3a5f !important; }
+        .dark .bg-white\/95 { background-color:rgba(7,16,28,.95) !important; border-color:#1e3a5f !important; }
+        .dark .bg-slate-50,.dark .bg-corporate-50,.dark .bg-slate-100 { background-color:#0c1929 !important; border-color:#1e3a5f !important; }
+        .dark .bg-slate-900 { background-color:#0d2137 !important; border:1px solid #1d4ed8 !important; }
+        .dark .text-corporate-900,.dark .text-corporate-800,.dark .text-slate-900 { color:#fff !important; }
+        .dark .text-corporate-700,.dark .text-corporate-600 { color:#e2e8f0 !important; }
+        .dark .text-corporate-500,.dark .text-corporate-400 { color:#94a3b8 !important; }
+        .dark .text-corporate-primary { color:#60a5fa !important; }
+        .dark .border-corporate-200,.dark .border-slate-200 { border-color:#1e3a5f !important; }
+        .dark .input-field { background-color:#050505 !important; border-color:#1e3a5f !important; color:#fff !important; }
+        .dark .input-field:focus { border-color:#1d4ed8 !important; background-color:#07101c !important; box-shadow:0 0 0 4px rgba(29,78,216,.2) !important; }
+        .dark .question-card { background:#07101c !important; border-color:#1e3a5f !important; }
+        .dark .bg-blue-50,.dark .bg-indigo-50 { background-color:rgba(29,78,216,.15) !important; border-color:rgba(29,78,216,.4) !important; }
+        .dark .text-blue-500,.dark .text-blue-600,.dark .text-blue-700,.dark .text-blue-800 { color:#93c5fd !important; }
+        .dark .bg-amber-50 { background-color:rgba(245,158,11,.15) !important; border-color:rgba(245,158,11,.4) !important; }
+        .dark .bg-green-50,.dark .bg-emerald-50 { background-color:rgba(16,185,129,.15) !important; border-color:rgba(16,185,129,.4) !important; }
+        .dark .bg-red-50 { background-color:rgba(239,68,68,.15) !important; border-color:rgba(239,68,68,.4) !important; }
+        .dark .text-red-500,.dark .text-red-600,.dark .text-red-700,.dark .text-red-800 { color:#fca5a5 !important; }
+        .dark .hover\:bg-black:hover { background-color:#0d2137 !important; }
     </style>
 </head>
 <body class="min-h-screen flex flex-col justify-center sm:py-12 sm:px-6 relative no-select transition-colors duration-300">
 
-    <div class="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-corporate-200/50 dark:from-purple-900/20 to-transparent pointer-events-none z-0 transition-colors duration-300"></div>
+    <div class="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-blue-900/20 to-transparent pointer-events-none z-0"></div>
 
     <!-- FLOATING TIMER -->
     <div id="floating-timer" class="fixed top-3 right-3 sm:top-6 sm:right-6 bg-corporate-900 text-white px-3 py-1.5 sm:px-5 sm:py-2.5 rounded-full font-mono font-bold shadow-lg z-50 hidden flex-col items-center gap-1 border border-corporate-700">
         <div class="flex items-center gap-2 sm:gap-3 text-xs sm:text-base">
-            <i class="fa-solid fa-stopwatch text-corporate-primary animate-pulse"></i>
+            <i class="fa-solid fa-stopwatch text-blue-400 animate-pulse"></i>
             <span id="timer-display" class="tracking-widest">00:00</span>
         </div>
         <div id="connection-status" class="text-[9px] font-bold text-emerald-500 uppercase tracking-widest mt-0.5">
@@ -170,12 +140,12 @@
         </div>
     </div>
 
-    <!-- FULLSCREEN VIOLATION OVERLAY -->
+    <!-- FULLSCREEN OVERLAY -->
     <div id="strict-fullscreen-overlay" class="fixed inset-0 bg-corporate-900/95 backdrop-blur-md z-[9999] hidden flex-col items-center justify-center text-center p-6">
         <i class="fa-solid fa-triangle-exclamation text-5xl sm:text-6xl text-red-500 mb-6 animate-pulse"></i>
-        <h1 class="text-2xl sm:text-4xl font-extrabold text-white mb-4 tracking-tight">SECURITY VIOLATION</h1>
-        <p class="text-corporate-300 text-sm sm:text-lg max-w-2xl mb-8 leading-relaxed">You have exited mandatory fullscreen mode. This incident has been recorded.</p>
-        <button onclick="forceReturnToFullscreen()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 sm:py-4 px-6 sm:px-10 rounded-xl shadow-lg transition-all text-base sm:text-lg flex items-center">
+        <h1 class="text-2xl sm:text-4xl font-extrabold text-white mb-4">SECURITY VIOLATION</h1>
+        <p class="text-slate-300 text-sm sm:text-lg max-w-2xl mb-8 leading-relaxed">You have exited mandatory fullscreen mode. This incident has been recorded.</p>
+        <button onclick="forceReturnToFullscreen()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 sm:py-4 px-6 sm:px-10 rounded-xl transition-all text-base sm:text-lg flex items-center">
             Return to Assessment <i class="fa-solid fa-expand ml-3"></i>
         </button>
     </div>
@@ -183,53 +153,36 @@
     <!-- KICK OVERLAY -->
     <div id="kick-overlay" class="fixed inset-0 bg-red-950/95 backdrop-blur-md z-[99999] hidden flex-col items-center justify-center text-center p-6">
         <i class="fa-solid fa-skull-crossbones text-6xl sm:text-7xl text-red-500 mb-6 animate-pulse"></i>
-        <h1 class="text-3xl sm:text-5xl font-extrabold text-white mb-4 tracking-tight">SESSION TERMINATED</h1>
+        <h1 class="text-3xl sm:text-5xl font-extrabold text-white mb-4">SESSION TERMINATED</h1>
         <p id="kick-reason" class="text-red-200 text-sm sm:text-lg max-w-2xl mb-8 leading-relaxed">Your access has been permanently revoked.</p>
-        <button onclick="window.location.href='/'" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 sm:py-4 px-6 sm:px-10 rounded-xl transition-all text-base sm:text-lg mt-4">Exit System</button>
+        <button onclick="window.location.href='/'" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 sm:py-4 px-6 sm:px-10 rounded-xl transition-all text-base sm:text-lg">Exit</button>
     </div>
 
-    <!-- INFO MODAL -->
-    <div id="info-modal" class="fixed inset-0 bg-corporate-900/80 backdrop-blur-sm hidden items-center justify-center z-[100] p-4">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full fade-enter overflow-hidden flex flex-col p-6 sm:p-8">
-            <div class="flex items-center justify-center w-16 h-16 bg-blue-50 rounded-full mx-auto mb-4 text-blue-600">
-                <i class="fa-solid fa-book-open text-2xl"></i>
-            </div>
-            <h2 class="text-2xl font-extrabold text-corporate-900 text-center mb-2">Portal Guidelines</h2>
-            <p class="text-sm text-corporate-500 text-center mb-6">Please read before logging in.</p>
-            <ul class="space-y-4 text-sm text-corporate-700 mb-8">
-                <li class="flex items-start"><i class="fa-solid fa-circle-check text-green-500 mt-1 mr-3"></i><span><strong>Rank Requirement:</strong> You must hold minimum rank Warrant Officer [WO] in the official group.</span></li>
-                <li class="flex items-start"><i class="fa-solid fa-circle-check text-green-500 mt-1 mr-3"></i><span><strong>Access Code:</strong> Ensure you have a valid single-use access code from the Academy Head.</span></li>
-                <li class="flex items-start"><i class="fa-solid fa-shield-halved text-corporate-primary mt-1 mr-3"></i><span><strong>Anti-Cheat Active:</strong> Leaving the page, copy-pasting, or using DevTools is strictly prohibited.</span></li>
-            </ul>
-            <button onclick="closeInfoModal()" class="w-full bg-corporate-100 hover:bg-corporate-200 text-corporate-800 font-bold py-3.5 rounded-xl transition-all">I Understand</button>
-        </div>
-    </div>
-
-    <!-- MAIN APP CONTAINER -->
+    <!-- MAIN APP -->
     <div class="max-w-5xl w-full mx-auto bg-white/95 backdrop-blur-md rounded-none sm:rounded-2xl shadow-none sm:shadow-premium border-0 sm:border border-corporate-200/80 overflow-hidden flex flex-col min-h-[100vh] sm:min-h-[600px] relative z-10" id="app-container"></div>
 
     <div id="toast-container"></div>
 
     <!-- THEME TOGGLE -->
-    <button onclick="toggleTheme()" class="fixed bottom-6 left-6 w-12 h-12 sm:w-14 sm:h-14 bg-white dark:bg-[#0a0a0c] text-corporate-900 dark:text-purple-400 rounded-full flex items-center justify-center transition-all duration-300 z-[70] shadow-lg hover:shadow-xl border-2 border-corporate-200 dark:border-purple-900">
+    <button onclick="toggleTheme()" class="fixed bottom-6 left-6 w-12 h-12 sm:w-14 sm:h-14 bg-white dark:bg-[#07101c] text-corporate-900 dark:text-blue-400 rounded-full flex items-center justify-center transition-all duration-300 z-[70] shadow-lg border-2 border-corporate-200 dark:border-blue-900">
         <i id="theme-icon" class="fa-solid fa-moon text-lg sm:text-xl"></i>
     </button>
 
     <!-- LOADING MODAL -->
     <div id="loading-modal" class="fixed inset-0 bg-corporate-900/40 backdrop-blur-sm hidden items-center justify-center z-[100] px-4">
-        <div class="bg-white p-5 sm:p-6 rounded-2xl shadow-2xl flex items-center space-x-4 sm:space-x-5 w-full max-w-sm mx-auto">
+        <div class="bg-white p-5 sm:p-6 rounded-2xl shadow-2xl flex items-center space-x-4 w-full max-w-sm mx-auto">
             <div class="relative flex justify-center items-center flex-shrink-0">
                 <div class="absolute w-8 h-8 sm:w-10 sm:h-10 border-4 border-corporate-100 rounded-full"></div>
-                <div class="w-8 h-8 sm:w-10 sm:h-10 border-4 border-corporate-primary border-t-transparent rounded-full animate-spin"></div>
+                <div class="w-8 h-8 sm:w-10 sm:h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
             </div>
-            <span class="text-corporate-800 font-semibold text-base sm:text-lg tracking-wide" id="loading-text">Processing data...</span>
+            <span class="text-corporate-800 font-semibold text-base sm:text-lg" id="loading-text">Processing...</span>
         </div>
     </div>
 
     <!-- SUCCESS MODAL -->
     <div id="success-modal" class="fixed inset-0 bg-corporate-900/40 backdrop-blur-sm hidden items-center justify-center z-50 px-4">
         <div class="bg-white p-8 sm:p-10 rounded-3xl shadow-2xl max-w-sm w-full text-center fade-enter border border-corporate-100">
-            <div class="w-16 h-16 sm:w-20 sm:h-20 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner"><i class="fa-solid fa-check text-3xl sm:text-4xl text-green-500"></i></div>
+            <div class="w-16 h-16 sm:w-20 sm:h-20 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-6"><i class="fa-solid fa-check text-3xl sm:text-4xl text-green-500"></i></div>
             <h2 class="text-xl sm:text-2xl font-extrabold text-corporate-900 mb-2">Transmission Successful</h2>
             <p class="text-corporate-500 text-xs sm:text-sm mb-8">Your exam has been secured and transmitted to command.</p>
             <button onclick="location.reload()" class="w-full bg-corporate-50 hover:bg-corporate-100 text-corporate-700 font-semibold py-3 px-4 rounded-xl">Close Session</button>
@@ -239,7 +192,7 @@
     <!-- ERROR MODAL -->
     <div id="error-modal" class="fixed inset-0 bg-corporate-900/40 backdrop-blur-sm hidden items-center justify-center z-50 px-4">
         <div class="bg-white p-8 sm:p-10 rounded-3xl shadow-2xl max-w-sm w-full text-center fade-enter border border-corporate-100">
-            <div class="w-16 h-16 sm:w-20 sm:h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner"><i class="fa-solid fa-triangle-exclamation text-3xl sm:text-4xl text-red-500"></i></div>
+            <div class="w-16 h-16 sm:w-20 sm:h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6"><i class="fa-solid fa-triangle-exclamation text-3xl sm:text-4xl text-red-500"></i></div>
             <h2 class="text-xl sm:text-2xl font-extrabold text-corporate-900 mb-2">System Error</h2>
             <p id="error-message" class="text-corporate-500 text-xs sm:text-sm mb-8">A problem occurred while transmitting the data.</p>
             <button onclick="document.getElementById('error-modal').classList.add('hidden');document.getElementById('error-modal').classList.remove('flex');" class="w-full bg-red-50 hover:bg-red-100 text-red-600 font-semibold py-3 px-4 rounded-xl">Acknowledge</button>
@@ -248,109 +201,88 @@
 
     <div class="absolute bottom-2 sm:bottom-4 left-0 w-full text-center z-[60] text-[11px] sm:text-xs font-medium text-corporate-500 dark:text-corporate-400">
         <a href="/privacy.html" target="_blank" class="hover:text-corporate-900 dark:hover:text-white transition-colors hover:underline">Privacy Policy</a>
-        <span class="mx-2 sm:mx-3 opacity-40">|</span>
+        <span class="mx-2 opacity-40">|</span>
         <a href="/tos.html" target="_blank" class="hover:text-corporate-900 dark:hover:text-white transition-colors hover:underline">Terms of Service</a>
     </div>
 
     <script>
-    // =========================================================================
-    // GLOBAL STATE
-    // =========================================================================
-    let tabSwitches       = 0;
+    // ── GLOBAL STATE ──────────────────────────────────────────────────────────
+    let tabSwitches        = 0;
     let interviewStartTime = null;
-    let timerInterval     = null;
+    let timerInterval      = null;
     let codeRevokeListener = null;
+    let watchdogInterval   = null;
+    let pingInterval       = null;
+    let lastSuccessfulPing = Date.now();
+    let isKickTriggered    = false;
 
     let appState = {
         robloxId: null, robloxName: null,
-        isWO: false,
+        isEligible: false,
         firebaseToken: null,
-        currentScreen: 'loading',
         currentAccessCode: null
     };
 
-    let formSections       = [];
+    let formSections        = [];
     let currentSectionIndex = 0;
-    let candidateData      = {};
-    let answers            = {};
+    let candidateData       = {};
+    let answers             = {};
     let autosaveTimeout;
-    const appContainer     = document.getElementById('app-container');
+    let QUESTION_BANK       = [];
+    let CATEGORIES          = [];
 
-    let QUESTION_BANK = [];
-    let CATEGORIES    = [];
+    const appContainer = document.getElementById('app-container');
 
-    // ── Watchdog (anti-cheat connection monitor) ──────────────────────────────
-    let watchdogInterval = null;
-    let pingInterval     = null;
-    let lastSuccessfulPing = Date.now();
-    let isKickTriggered  = false;
-
-    // =========================================================================
-    // INFO MODAL
-    // =========================================================================
-    function showInfoModal() { document.getElementById('info-modal').classList.remove('hidden'); document.getElementById('info-modal').classList.add('flex'); }
-    function closeInfoModal() { document.getElementById('info-modal').classList.add('hidden'); document.getElementById('info-modal').classList.remove('flex'); }
-
-    // =========================================================================
-    // TOAST
-    // =========================================================================
+    // ── TOAST ─────────────────────────────────────────────────────────────────
     function showToast(message, type = 'error') {
         const container = document.getElementById('toast-container');
         const toast     = document.createElement('div');
         toast.className = `toast toast-${type}`;
         const icon = type === 'error' ? '<i class="fa-solid fa-shield-halved"></i>' :
                      type === 'info'  ? '<i class="fa-solid fa-circle-info"></i>'   :
-                                        '<i class="fa-solid fa-cloud-arrow-up"></i>';
+                                        '<i class="fa-solid fa-check"></i>';
         toast.innerHTML = `${icon} ${message}`;
         container.appendChild(toast);
         setTimeout(() => { if (container.contains(toast)) container.removeChild(toast); }, 3000);
     }
 
-    // =========================================================================
-    // QUESTION BANK
-    // =========================================================================
+    // ── QUESTION BANK ─────────────────────────────────────────────────────────
     async function loadQuestionBankFromCloud() {
-        if (!window.firebaseDb || !window.firebaseDoc) return;
         try {
-            const docRef  = window.firebaseDoc(window.firebaseDb, "admin_data", "question_bank");
-            const dnap = await window.firebaseGetDoc(docRef);
-            if (dnap.exists()) {
-                QUESTION_BANK = dnap.data().questions  || [];
-                CATEGORIES    = dnap.data().categories || [];
+            const docRef  = window.firebaseDoc(window.firebaseDb, "mp_admin_data", "question_bank");
+            const docSnap = await window.firebaseGetDoc(docRef);
+            if (docSnap.exists()) {
+                QUESTION_BANK = docSnap.data().questions  || [];
+                CATEGORIES    = docSnap.data().categories || [];
             }
-        } catch(e) { console.error("Error loading question bank:", e); }
+        } catch(e) { console.error("Error loading MP question bank:", e); }
     }
 
-    // =========================================================================
-    // CCTV (live log)
-    // =========================================================================
+    // ── LIVE LOGS ─────────────────────────────────────────────────────────────
     async function sendLiveLog(actionType, messageStr) {
-        if (!appState.currentAccessCode || !candidateData.roblox || !window.firebaseAddDoc) return;
+        if (!appState.currentAccessCode || !candidateData.roblox) return;
         try {
-            const now        = new Date();
-            const expireDate = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-            await window.firebaseAddDoc(window.firebaseCollection(window.firebaseDb, "live_logs"), {
+            const now = new Date();
+            await window.firebaseAddDoc(window.firebaseCollection(window.firebaseDb, "mp_live_logs"), {
                 candidate:  candidateData.roblox,
                 discord:    candidateData.discord,
                 code:       appState.currentAccessCode,
                 type:       actionType,
                 message:    messageStr,
                 timestamp:  now.toISOString(),
-                expiresAt:  expireDate.toISOString()
+                expiresAt:  new Date(now.getTime() + 7*24*60*60*1000).toISOString()
             });
-        } catch(e) { console.error("CCTV Log failed:", e); }
+        } catch(e) {}
     }
 
-    // =========================================================================
-    // SECURITY / ANTI-CHEAT
-    // =========================================================================
+    // ── WATCHDOG / ANTI-CHEAT ─────────────────────────────────────────────────
     function handleConnectionLost(reason = "Connection lost. Session revoked.") {
         if (isKickTriggered) return;
         isKickTriggered = true;
-        if (appState.currentAccessCode && window.firebaseUpdateDoc) {
+        if (appState.currentAccessCode) {
             try {
                 window.firebaseUpdateDoc(
-                    window.firebaseDoc(window.firebaseDb, "access_codes", appState.currentAccessCode),
+                    window.firebaseDoc(window.firebaseDb, "mp_access_codes", appState.currentAccessCode),
                     { status: 'revoked', completedAt: new Date().toISOString(), reason }
                 );
             } catch(e) {}
@@ -359,8 +291,7 @@
     }
 
     async function performPing() {
-        const isTesting = localStorage.getItem('ric_test_mode') === 'true';
-        if (isKickTriggered || currentSectionIndex === 0 || isTesting) return;
+        if (isKickTriggered || currentSectionIndex === 0) return;
         try {
             const ctrl = new AbortController();
             const id   = setTimeout(() => ctrl.abort(), 4000);
@@ -372,12 +303,10 @@
     }
 
     function startWatchdogSystem() {
-        const isTesting = localStorage.getItem('ric_test_mode') === 'true';
-        if (watchdogInterval || isTesting) return;
-        
+        if (watchdogInterval) return;
         lastSuccessfulPing = Date.now();
-        pingInterval     = setInterval(performPing, 3500);
-        watchdogInterval = setInterval(() => {
+        pingInterval       = setInterval(performPing, 3500);
+        watchdogInterval   = setInterval(() => {
             if (currentSectionIndex > 0 && !isKickTriggered) {
                 if ((Date.now() - lastSuccessfulPing) / 1000 > 12)
                     handleConnectionLost("Security Violation: Connection lost for more than 12 seconds.");
@@ -398,7 +327,7 @@
     }
 
     window.addEventListener('offline', () => {
-        if (currentSectionIndex > 0) handleConnectionLost("Network hardware disconnected. Session revoked.");
+        if (currentSectionIndex > 0) handleConnectionLost("Network disconnected. Session revoked.");
     });
 
     document.addEventListener("visibilitychange", () => {
@@ -407,7 +336,6 @@
             showToast('Security Alert: Leaving the tab was recorded.', 'error');
             sendLiveLog('warning', 'ANTI-CHEAT: Candidate left the active tab.');
         } else if (!document.hidden && currentSectionIndex > 0) {
-            lastSuccessfulPing = Date.now(); 
             if (!navigator.onLine) handleConnectionLost("Network disconnected while in background.");
             else performPing();
         }
@@ -415,7 +343,7 @@
 
     window.addEventListener('focus', () => {
         if (currentSectionIndex > 0 && !isKickTriggered) {
-            if (!navigator.onLine) handleConnectionLost("Network disconnected while in background.");
+            if (!navigator.onLine) handleConnectionLost("Network disconnected.");
             else performPing();
         }
     });
@@ -439,87 +367,75 @@
         setTimeout(() => {
             document.getElementById('strict-fullscreen-overlay').classList.add('hidden');
             document.getElementById('strict-fullscreen-overlay').classList.remove('flex');
-            sendLiveLog('info', 'Candidate returned to Fullscreen.');
         }, 300);
     }
 
     function preventCheat(e) {
         e.preventDefault();
         showToast('Security Alert: Copy/Paste is prohibited.', 'error');
-        sendLiveLog('alert', 'ANTI-CHEAT: Candidate attempted Copy/Paste.');
+        sendLiveLog('alert', 'ANTI-CHEAT: Copy/Paste attempted.');
     }
 
     document.addEventListener('contextmenu', e => {
-        if (currentSectionIndex > 0) { e.preventDefault(); showToast('Security Alert: Right-click is disabled.', 'error'); sendLiveLog('warning', 'ANTI-CHEAT: Right-click.'); }
+        if (currentSectionIndex > 0) { e.preventDefault(); showToast('Security Alert: Right-click disabled.', 'error'); }
     });
 
     document.addEventListener('keydown', e => {
         if (currentSectionIndex > 0) {
-            if (e.keyCode === 123) { e.preventDefault(); showToast('Security Alert: DevTools disabled.', 'error'); sendLiveLog('alert', 'ANTI-CHEAT: F12.'); return false; }
-            if (e.ctrlKey && e.shiftKey && e.keyCode === 73) { e.preventDefault(); sendLiveLog('alert', 'ANTI-CHEAT: Ctrl+Shift+I.'); return false; }
-            if (e.ctrlKey && e.shiftKey && e.keyCode === 74) { e.preventDefault(); sendLiveLog('alert', 'ANTI-CHEAT: Ctrl+Shift+J.'); return false; }
-            if (e.ctrlKey && e.keyCode === 85) { e.preventDefault(); sendLiveLog('alert', 'ANTI-CHEAT: View Source.'); return false; }
+            if (e.keyCode === 123) { e.preventDefault(); return false; }
+            if (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74)) { e.preventDefault(); return false; }
+            if (e.ctrlKey && e.keyCode === 85) { e.preventDefault(); return false; }
         }
     });
 
     setInterval(() => {
         if (currentSectionIndex > 0) {
-            const before = new Date().getTime();
-            debugger;
-            const after = new Date().getTime();
+            const before = new Date().getTime(); debugger; const after = new Date().getTime();
             if (after - before > 100) {
                 document.body.innerHTML = '<div style="display:flex;height:100vh;width:100vw;background:#7f1d1d;color:white;align-items:center;justify-content:center;flex-direction:column;text-align:center;padding:2rem;"><h1 style="font-size:2rem;font-weight:bold;margin-bottom:1rem">SECURITY VIOLATION</h1><p style="font-size:1.2rem">SESSION TERMINATED. DEVTOOLS DETECTED.</p></div>';
-                sendLiveLog('alert', 'FATAL: DevTools detected. Session blocked.');
             }
         }
     }, 2000);
 
     function triggerSecurityKick(reason) {
-        if (timerInterval)   clearInterval(timerInterval);
-        if (pingInterval)    clearInterval(pingInterval);
+        if (timerInterval)    clearInterval(timerInterval);
+        if (pingInterval)     clearInterval(pingInterval);
         if (watchdogInterval) clearInterval(watchdogInterval);
         document.getElementById('floating-timer').classList.add('hidden');
-        if (candidateData.discord) localStorage.removeItem(`ric_autosave_${candidateData.discord}`);
+        if (candidateData.discord) localStorage.removeItem(`mp_autosave_${candidateData.discord}`);
         document.getElementById('kick-reason').innerText = reason;
         document.getElementById('kick-overlay').classList.remove('hidden');
         document.getElementById('kick-overlay').classList.add('flex');
-        sendLiveLog('alert', `FATAL: Session kicked. Reason: ${reason}`);
     }
 
-    // =========================================================================
-    // INIT & ROUTING
-    // =========================================================================
+    // ── INIT ──────────────────────────────────────────────────────────────────
     async function initApp() {
-        const urlParams    = new URLSearchParams(window.location.search);
-        const tokenPayload = urlParams.get('token');
-        const errorPayload = urlParams.get('error');
+        const urlParams = new URLSearchParams(window.location.search);
+        const tokenParam = urlParams.get('token');
+        const errorParam = urlParams.get('error');
 
-        if (errorPayload) { alert("Roblox authentication failed. Please try again."); window.location.href = '/'; return; }
+        if (errorParam) { alert("Roblox authentication failed. Please try again."); window.location.href = '/'; return; }
 
-        if (tokenPayload) {
+        if (tokenParam) {
             try {
                 const res  = await fetch('/api/verify-token', {
-                    method:  'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body:    JSON.stringify({ token: tokenPayload, requireAdmin: false })
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ token: tokenParam, requireAdmin: false })
                 });
                 const data = await res.json();
 
-                if (!data.valid) {
-                    alert(data.error || "Session invalid. Please login again.");
-                    window.location.href = '/';
-                    return;
-                }
+                if (!data.valid) { alert(data.error || "Session invalid. Please login again."); window.location.href = '/'; return; }
 
                 const decoded = data.payload;
                 appState.robloxId     = decoded.id;
                 appState.robloxName   = decoded.roblox;
-                appState.isWO         = decoded.isWO;
+                appState.isEligible   = decoded.isEligible;
                 appState.firebaseToken = decoded.firebaseToken;
                 window.history.replaceState({}, document.title, "/");
 
-                if (decoded.isAdmin || decoded.isHighCommand || decoded.isDeveloper) {
-                    window.location.href = `/admin.html?token=${tokenPayload}`;
+                // Redirect admins/guests who ended up here
+                if (decoded.isAdmin || decoded.isGuest) {
+                    window.location.href = `/api/admin`;
                     return;
                 }
 
@@ -527,19 +443,18 @@
                     try { await window.firebaseSignIn(window.firebaseAuth, appState.firebaseToken); } catch(e) {}
                 }
 
-                if (!appState.isWO) {
+                if (!appState.isEligible) {
                     formSections = [{ type: "rejected" }];
-                } else {            
+                } else {
                     await loadQuestionBankFromCloud();
                     formSections = [{
                         type: "auth_code",
                         title: "Identity Confirmed",
-                        subtitle: "MP EXAM PORTAL",
-                        description: `Welcome, **${appState.robloxName}**. Enter the Access Code provided by the Academy Head.`,
+                        subtitle: "Military Police Examination Portal",
+                        description: `Welcome, **${appState.robloxName}**. Enter the Access Code provided by your Examiner.`,
                         buttonText: "Access Exam"
                     }];
                 }
-
             } catch(e) {
                 console.error("Token validation error:", e);
                 formSections = [{ type: "login_roblox" }];
@@ -548,157 +463,146 @@
             formSections = [{ type: "login_roblox" }];
         }
 
-        if (window.firebaseDoc && window.firebaseDb) {
-            const docRef = window.firebaseDoc(window.firebaseDb, "settings", "portal");
-            window.firebaseOnSnapshot(docRef, (dnap) => {
-                if (dnap.exists() && dnap.data().isOpen === false) {
-                    formSections = [{ type: "closed_portal" }];
-                    currentSectionIndex = 0;
-                    renderSection();
-                } else {
-                    renderSection();
-                }
-            }, () => renderSection());
-        } else {
-            renderSection();
-        }
+        // Portal open/close listener
+        const docRef = window.firebaseDoc(window.firebaseDb, "mp_settings", "portal");
+        window.firebaseOnSnapshot(docRef, (docSnap) => {
+            if (docSnap.exists() && docSnap.data().isOpen === false) {
+                formSections = [{ type: "closed_portal" }];
+                currentSectionIndex = 0;
+                renderSection();
+            } else {
+                renderSection();
+            }
+        }, () => renderSection());
     }
 
-    // =========================================================================
-    // STEPPER
-    // =========================================================================
+    // ── STEPPER ───────────────────────────────────────────────────────────────
     function renderStepper() {
-        if (!formSections[currentSectionIndex] || ['login_roblox','rejected','auth_code','closed_portal'].includes(formSections[currentSectionIndex].type)) return '';
+        if (['login_roblox','rejected','auth_code','closed_portal'].includes(formSections[currentSectionIndex].type)) return '';
         const offset    = formSections.findIndex(s => !['login_roblox','rejected','auth_code','closed_portal'].includes(s.type));
         const stepIndex = currentSectionIndex - offset;
         const steps     = formSections.filter(s => !['login_roblox','rejected','auth_code','closed_portal'].includes(s.type));
-        let html = `<div class="bg-white/95 backdrop-blur-md sm:bg-white/80 border-b border-corporate-200/60 px-4 sm:px-10 py-3 sm:py-5 flex items-center justify-between overflow-x-auto shadow-sm relative z-20 sticky top-0 sm:static">`;
+        let html = `<div class="bg-white/95 backdrop-blur-md border-b border-corporate-200/60 px-4 sm:px-10 py-3 sm:py-5 flex items-center justify-between overflow-x-auto shadow-sm sticky top-0 z-20">`;
         steps.forEach((step, idx) => {
-            const isPast   = stepIndex > idx;
-            const isActive = stepIndex === idx;
-            let iconClass  = isActive ? "bg-corporate-primary text-white shadow-lg shadow-blue-500/30 ring-4 ring-blue-50 border-transparent" : (isPast ? "bg-green-500 text-white shadow-md border-transparent" : "bg-corporate-50 border-corporate-200 text-corporate-400 border-2");
-            let lineClass  = isPast ? "bg-green-500" : "bg-corporate-100";
-            html += `<div class="flex items-center ${idx !== steps.length - 1 ? 'flex-1' : ''} group">
+            const isPast = stepIndex > idx, isActive = stepIndex === idx;
+            const iconClass = isActive ? "bg-blue-600 text-white shadow-lg ring-4 ring-blue-50 border-transparent" : (isPast ? "bg-green-500 text-white border-transparent" : "bg-corporate-50 border-corporate-200 text-corporate-400 border-2");
+            const lineClass = isPast ? "bg-green-500" : "bg-corporate-100";
+            html += `<div class="flex items-center ${idx !== steps.length-1 ? 'flex-1' : ''} group">
                 <div class="flex items-center text-sm transition-all duration-300 ${isActive ? 'font-bold text-corporate-900' : (isPast ? 'font-semibold text-green-600' : 'font-medium text-corporate-400')}">
                     <span class="w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-[10px] sm:text-xs transition-all duration-300 mr-2 sm:mr-3 flex-shrink-0 ${iconClass}">
-                        ${isPast ? '<i class="fa-solid fa-check text-[9px] sm:text-[11px]"></i>' : (idx + 1)}
+                        ${isPast ? '<i class="fa-solid fa-check text-[9px] sm:text-[11px]"></i>' : (idx+1)}
                     </span>
                     <span class="${isActive ? 'inline-block' : 'hidden'} sm:inline-block tracking-tight whitespace-nowrap text-xs sm:text-sm mr-2 sm:mr-0">${step.title}</span>
                 </div>
-                ${idx !== steps.length - 1 ? `<div class="h-[2px] rounded-full flex-1 mx-2 sm:mx-4 transition-all duration-500 ${lineClass}"></div>` : ''}
+                ${idx !== steps.length-1 ? `<div class="h-[2px] rounded-full flex-1 mx-2 sm:mx-4 transition-all duration-500 ${lineClass}"></div>` : ''}
             </div>`;
         });
         return html + `</div>`;
     }
 
-    // =========================================================================
-    // RENDER SECTION
-    // =========================================================================
+    // ── RENDER SECTION ────────────────────────────────────────────────────────
     function renderSection() {
         const section = formSections[currentSectionIndex];
-        if (!section) return;
         let html = renderStepper() + `<div class="p-5 sm:p-8 md:p-12 flex-grow flex flex-col fade-enter relative z-10 bg-slate-50/30 pb-28 md:pb-8">`;
 
         if (section.type === 'closed_portal') {
             html += `<div class="text-center my-auto w-full max-w-md mx-auto fade-enter">
-                <div class="w-20 h-20 sm:w-24 sm:h-24 bg-corporate-900 rounded-3xl flex items-center justify-center mx-auto mb-6 sm:mb-8 shadow-inner border border-corporate-700"><i class="fa-solid fa-lock text-corporate-300 text-3xl sm:text-4xl"></i></div>
+                <div class="w-20 h-20 sm:w-24 sm:h-24 bg-corporate-900 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-inner border border-corporate-700"><i class="fa-solid fa-lock text-corporate-300 text-3xl sm:text-4xl"></i></div>
                 <h2 class="text-[10px] sm:text-xs font-bold tracking-[0.2em] text-red-500 uppercase mb-2 sm:mb-3">Secure System</h2>
-                <h1 class="text-3xl sm:text-4xl font-extrabold text-corporate-900 mb-4 sm:mb-6 tracking-tight">PORTAL CLOSED</h1>
-                <div class="bg-red-50 border border-red-200 p-4 sm:p-5 rounded-xl text-center mb-8"><p class="text-red-800 text-xs sm:text-sm font-medium leading-relaxed">Recruitment sessions are currently closed. Please wait for the next official session.</p></div>
+                <h1 class="text-3xl sm:text-4xl font-extrabold text-corporate-900 mb-4 tracking-tight">PORTAL CLOSED</h1>
+                <div class="bg-red-50 border border-red-200 p-4 rounded-xl text-center"><p class="text-red-800 text-xs sm:text-sm font-medium leading-relaxed">Examination sessions are currently closed. Please wait for the next official session.</p></div>
             </div>`;
+
         } else if (section.type === 'login_roblox') {
             html += `<div class="text-center my-auto w-full max-w-md mx-auto px-2">
-                <div class="w-24 h-24 sm:w-28 sm:h-28 bg-white rounded-3xl flex items-center justify-center mx-auto mb-6 sm:mb-8 shadow-xl overflow-hidden border-4 border-corporate-100">
-                    <img src="image.png" alt="Portal Logo" class="w-full h-full object-contain p-2" onerror="this.outerHTML='<i class=\\'fa-solid fa-shield-halved text-corporate-900 text-4xl sm:text-5xl\\'></i>'">
+                <div class="w-24 h-24 sm:w-28 sm:h-28 bg-white rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-xl overflow-hidden border-4 border-corporate-100">
+                    <img src="image.png" alt="MP Logo" class="w-full h-full object-contain p-2" onerror="this.outerHTML='<i class=\\'fa-solid fa-shield-halved text-blue-700 text-4xl sm:text-5xl\\'></i>'">
                 </div>
-                <h2 class="text-[10px] sm:text-xs font-bold tracking-[0.2em] text-corporate-primary uppercase mb-2 sm:mb-3">Officer Candidate School</h2>
-                <h1 class="text-3xl sm:text-4xl font-extrabold text-corporate-900 mb-4 sm:mb-6 tracking-tight">Access Portal</h1>
-                <p class="text-corporate-500 mb-8 sm:mb-10 text-xs sm:text-sm leading-relaxed">Authentication via the official Roblox network is mandatory to verify your rank.</p>
-                <div class="flex flex-col sm:flex-row gap-3 w-full">
-                    <button onclick="window.location.href='/api/login'" class="w-full sm:w-2/3 bg-slate-900 hover:bg-black text-white font-bold py-3.5 sm:py-4 rounded-xl shadow-lg transition-all flex items-center justify-center text-base sm:text-lg gap-3">
-                        <i class="fa-solid fa-cube text-lg sm:text-xl"></i> Login with Roblox
-                    </button>
-                    <button onclick="showInfoModal()" class="w-full sm:w-1/3 bg-corporate-100 hover:bg-corporate-200 text-corporate-800 font-bold py-3.5 sm:py-4 rounded-xl shadow-sm transition-all flex items-center justify-center text-base sm:text-lg gap-2 border border-corporate-200">
-                        <i class="fa-solid fa-circle-info"></i> Info
-                    </button>
-                </div>
+                <h2 class="text-[10px] sm:text-xs font-bold tracking-[0.2em] text-blue-600 uppercase mb-2 sm:mb-3">Military Police</h2>
+                <h1 class="text-3xl sm:text-4xl font-extrabold text-corporate-900 mb-4 tracking-tight">Examination Portal</h1>
+                <p class="text-corporate-500 mb-8 text-xs sm:text-sm leading-relaxed">Authentication via the official Roblox network is mandatory to verify your rank.</p>
+                <button onclick="window.location.href='/api/login'" class="w-full bg-slate-900 hover:bg-black text-white font-bold py-3.5 sm:py-4 rounded-xl shadow-lg transition-all flex items-center justify-center text-base sm:text-lg gap-3">
+                    <i class="fa-solid fa-cube text-lg sm:text-xl"></i> Login with Roblox
+                </button>
             </div>`;
+
         } else if (section.type === 'rejected') {
             html += `<div class="text-center my-auto w-full max-w-md mx-auto">
-                <div class="w-20 h-20 sm:w-24 sm:h-24 bg-red-100 rounded-3xl flex items-center justify-center mx-auto mb-6 sm:mb-8 shadow-inner border border-red-200"><i class="fa-solid fa-hand-paper text-red-500 text-3xl sm:text-4xl"></i></div>
-                <h1 class="text-3xl sm:text-4xl font-extrabold text-corporate-900 mb-3 sm:mb-4 tracking-tight">ACCESS DENIED</h1>
-                <div class="bg-red-50 border border-red-200 p-4 rounded-xl text-left mb-6 sm:mb-8">
+                <div class="w-20 h-20 sm:w-24 sm:h-24 bg-red-100 rounded-3xl flex items-center justify-center mx-auto mb-6 border border-red-200"><i class="fa-solid fa-hand-paper text-red-500 text-3xl sm:text-4xl"></i></div>
+                <h1 class="text-3xl sm:text-4xl font-extrabold text-corporate-900 mb-3 tracking-tight">ACCESS DENIED</h1>
+                <div class="bg-red-50 border border-red-200 p-4 rounded-xl text-left mb-6">
                     <p class="text-red-800 text-xs sm:text-sm font-medium leading-relaxed"><i class="fa-solid fa-circle-xmark mr-2"></i> Your identity (<strong>${appState.robloxName}</strong>) does not meet requirements.</p>
-                    <p class="text-red-700 text-[10px] sm:text-xs mt-2">* Minimum rank: <strong>Warrant Officer [WO]</strong>.</p>
+                    <p class="text-red-700 text-[10px] sm:text-xs mt-2">* You must hold an eligible rank in the Military Police group.</p>
                 </div>
-                <button onclick="window.location.href='/'" class="w-full bg-corporate-100 hover:bg-corporate-200 text-corporate-800 font-bold py-3.5 sm:py-4 rounded-xl transition-all text-base sm:text-lg">Return to Main Page</button>
+                <button onclick="window.location.href='/'" class="w-full bg-corporate-100 hover:bg-corporate-200 text-corporate-800 font-bold py-3.5 rounded-xl transition-all">Return to Main Page</button>
             </div>`;
+
         } else if (section.type === 'auth_code') {
             html += `<div class="text-center my-auto w-full max-w-md mx-auto">
-                <div class="w-20 h-20 sm:w-24 sm:h-24 bg-white rounded-3xl flex items-center justify-center mx-auto mb-6 sm:mb-8 shadow-xl overflow-hidden border-4 border-corporate-100">
-                    <img src="image.png" alt="Portal Logo" class="w-full h-full object-contain p-2" onerror="this.outerHTML='<i class=\\'fa-solid fa-shield-halved text-corporate-900 text-3xl sm:text-4xl\\'></i>'">
+                <div class="w-20 h-20 sm:w-24 sm:h-24 bg-white rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-xl overflow-hidden border-4 border-corporate-100">
+                    <img src="image.png" alt="MP Logo" class="w-full h-full object-contain p-2" onerror="this.outerHTML='<i class=\\'fa-solid fa-shield-halved text-blue-700 text-3xl\\'></i>'">
                 </div>
-                <h2 class="text-[10px] sm:text-xs font-bold tracking-[0.2em] text-corporate-primary uppercase mb-2 sm:mb-3">${section.subtitle}</h2>
-                <h1 class="text-2xl sm:text-3xl font-extrabold text-corporate-900 mb-3 sm:mb-4 tracking-tight">${section.title}</h1>
-                <p class="text-corporate-500 mb-6 sm:mb-8 text-xs sm:text-sm leading-relaxed">${section.description}</p>
-                <input type="text" id="access-code-input" autocomplete="off" class="input-field w-full rounded-xl px-4 py-3 sm:px-5 sm:py-4 text-center text-corporate-900 font-mono tracking-widest text-base sm:text-lg focus:outline-none mb-3 uppercase" placeholder="e.g. RIC-A8X9K2">
-                <p id="auth-error" class="text-red-500 text-xs sm:text-sm mb-5 sm:mb-6 hidden font-medium"><i class="fa-solid fa-circle-exclamation mr-1.5"></i> Invalid or expired code.</p>
+                <h2 class="text-[10px] sm:text-xs font-bold tracking-[0.2em] text-blue-600 uppercase mb-2 sm:mb-3">${section.subtitle}</h2>
+                <h1 class="text-2xl sm:text-3xl font-extrabold text-corporate-900 mb-3 tracking-tight">${section.title}</h1>
+                <p class="text-corporate-500 mb-6 text-xs sm:text-sm leading-relaxed">${section.description}</p>
+                <input type="text" id="access-code-input" autocomplete="off" class="input-field w-full rounded-xl px-4 py-3 sm:px-5 sm:py-4 text-center text-corporate-900 font-mono tracking-widest text-base sm:text-lg focus:outline-none mb-3 uppercase" placeholder="e.g. MP-A8X9K2">
+                <p id="auth-error" class="text-red-500 text-xs sm:text-sm mb-5 hidden font-medium"><i class="fa-solid fa-circle-exclamation mr-1.5"></i> Invalid or expired code.</p>
                 <button id="auth-btn" onclick="authenticateCode()" class="w-full bg-corporate-900 hover:bg-black text-white font-semibold py-3.5 sm:py-4 px-6 sm:px-10 rounded-xl shadow-xl transition-all transform hover:-translate-y-0.5 flex items-center justify-center text-base sm:text-lg">
                     ${section.buttonText} <i class="fa-solid fa-unlock ml-3"></i>
                 </button>
             </div>`;
+
         } else if (section.type === 'profile_review') {
             html += `
                 <div class="mb-6 sm:mb-8 pb-4 sm:pb-5 border-b border-corporate-200">
                     <h1 class="text-2xl sm:text-4xl font-extrabold text-corporate-900 tracking-tight">${section.title}</h1>
-                    <p class="text-corporate-500 mt-1 sm:mt-2 font-medium tracking-wide text-xs sm:text-sm uppercase text-corporate-primary">${section.subtitle}</p>
+                    <p class="text-corporate-500 mt-1 sm:mt-2 font-medium tracking-wide text-xs sm:text-sm uppercase text-blue-600">${section.subtitle}</p>
                 </div>
                 <div class="fade-enter-delayed space-y-4 sm:space-y-6 mb-auto w-full max-w-3xl mx-auto">
-                    <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-2xl p-4 sm:p-6 flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-3 sm:gap-4 shadow-sm">
+                    <div class="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-2xl p-4 sm:p-6 flex gap-4 items-start shadow-sm">
                         <div class="w-12 h-12 sm:w-16 sm:h-16 bg-white rounded-full flex items-center justify-center text-blue-500 shadow-sm flex-shrink-0"><i class="fa-solid fa-user-shield text-xl sm:text-2xl"></i></div>
-                        <div><h3 class="text-base sm:text-lg font-bold text-corporate-900">Official Exam Prepared</h3><p class="text-xs sm:text-sm text-corporate-600 mt-1 leading-relaxed">Your identity has been verified. Answers will be permanently attached to your profile.</p></div>
+                        <div><h3 class="text-base sm:text-lg font-bold text-corporate-900">Official Exam Prepared</h3><p class="text-xs sm:text-sm text-corporate-600 mt-1 leading-relaxed">Your identity has been verified and linked to this code.</p></div>
                     </div>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
-                        <div class="bg-white border border-corporate-200 rounded-2xl p-4 sm:p-6 shadow-sm relative overflow-hidden">
-                            <div class="absolute top-0 right-0 w-12 h-12 sm:w-16 sm:h-16 bg-indigo-50 rounded-bl-full -mr-6 -mt-6 sm:-mr-8 sm:-mt-8"></div>
-                            <div class="flex items-center mb-3 sm:mb-4"><i class="fa-brands fa-discord text-indigo-500 text-lg sm:text-xl mr-2 sm:mr-3"></i><p class="text-[10px] sm:text-xs font-bold text-corporate-400 uppercase tracking-wider">Discord</p></div>
+                        <div class="bg-white border border-corporate-200 rounded-2xl p-4 sm:p-6 shadow-sm">
+                            <div class="flex items-center mb-3"><i class="fa-brands fa-discord text-indigo-500 text-lg mr-2"></i><p class="text-[10px] sm:text-xs font-bold text-corporate-400 uppercase tracking-wider">Discord</p></div>
                             <p class="font-bold text-corporate-900 text-lg sm:text-xl truncate">${candidateData.discord}</p>
                         </div>
-                        <div class="bg-white border border-corporate-200 rounded-2xl p-4 sm:p-6 shadow-sm relative overflow-hidden">
-                            <div class="absolute top-0 right-0 w-12 h-12 sm:w-16 sm:h-16 bg-blue-50 rounded-bl-full -mr-6 -mt-6 sm:-mr-8 sm:-mt-8"></div>
-                            <div class="flex items-center mb-3 sm:mb-4"><i class="fa-solid fa-gamepad text-blue-500 text-lg sm:text-xl mr-2 sm:mr-3"></i><p class="text-[10px] sm:text-xs font-bold text-corporate-400 uppercase tracking-wider">Roblox Callsign</p></div>
+                        <div class="bg-white border border-corporate-200 rounded-2xl p-4 sm:p-6 shadow-sm">
+                            <div class="flex items-center mb-3"><i class="fa-solid fa-gamepad text-blue-500 text-lg mr-2"></i><p class="text-[10px] sm:text-xs font-bold text-corporate-400 uppercase tracking-wider">Roblox</p></div>
                             <p class="font-bold text-corporate-900 text-lg sm:text-xl truncate">${candidateData.roblox}</p>
                         </div>
                     </div>
-                    <div class="bg-corporate-900 dark:bg-[#0a0a0c] border border-corporate-700 dark:border-[#3b0764] rounded-2xl p-5 shadow-lg relative overflow-hidden mt-2 sm:mt-4">
-                        <div class="absolute top-0 left-0 w-1 h-full bg-corporate-primary dark:bg-purple-500"></div>
-                        <h4 class="text-white dark:text-purple-400 font-extrabold text-sm sm:text-base uppercase tracking-widest mb-4 flex items-center"><i class="fa-solid fa-list-check mr-2 text-corporate-300 dark:text-purple-500"></i> O.C.S. Evaluation Expectations</h4>
+                    <div class="bg-corporate-900 dark:bg-[#07101c] border border-corporate-700 dark:border-[#1e3a5f] rounded-2xl p-5 shadow-lg relative overflow-hidden">
+                        <div class="absolute top-0 left-0 w-1 h-full bg-blue-600"></div>
+                        <h4 class="text-white font-extrabold text-sm sm:text-base uppercase tracking-widest mb-4 flex items-center"><i class="fa-solid fa-list-check mr-2 text-blue-400"></i> Examination Standards</h4>
                         <ul class="space-y-3 text-xs sm:text-sm text-corporate-100 dark:text-slate-300">
-                            <li class="flex items-start"><span class="mr-2.5 text-corporate-primary dark:text-purple-500 font-bold">-</span><span>Use correct grammar, punctuation, and a formal tone throughout your answers.</span></li>
-                            <li class="flex items-start"><span class="mr-2.5 text-corporate-primary dark:text-purple-500 font-bold">-</span><span>Your answers must accurately reflect official procedures and guidelines.</span></li>
-                            <li class="flex items-start"><span class="mr-2.5 text-corporate-primary dark:text-purple-500 font-bold">-</span><span>Provide detailed explanations with clear reasoning behind your decisions.</span></li>
-                            <li class="flex items-start"><span class="mr-2.5 text-corporate-primary dark:text-purple-500 font-bold">-</span><span>All submissions must be entirely your own original work.</span></li>
+                            <li class="flex items-start"><span class="mr-2.5 text-blue-400 font-bold">-</span><span>Use correct grammar, punctuation, and a formal tone throughout your answers.</span></li>
+                            <li class="flex items-start"><span class="mr-2.5 text-blue-400 font-bold">-</span><span>Your answers must accurately reflect official Military Police procedures and regulations.</span></li>
+                            <li class="flex items-start"><span class="mr-2.5 text-blue-400 font-bold">-</span><span>Provide detailed explanations with clear reasoning behind your decisions.</span></li>
+                            <li class="flex items-start"><span class="mr-2.5 text-blue-400 font-bold">-</span><span>All submissions must be entirely your own original work.</span></li>
                         </ul>
                     </div>
-                    <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 sm:p-4 flex items-start mt-2 sm:mt-4">
-                        <i class="fa-solid fa-triangle-exclamation text-amber-500 mt-0.5 mr-2 sm:mr-3 text-sm sm:text-base"></i>
+                    <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 sm:p-4 flex items-start">
+                        <i class="fa-solid fa-triangle-exclamation text-amber-500 mt-0.5 mr-3"></i>
                         <p class="text-[10px] sm:text-xs text-amber-800 font-medium leading-relaxed"><strong>ANTI-CHEAT:</strong> Browser will enter Fullscreen mode. Any exit will be marked as a security violation.</p>
                     </div>
                 </div>
                 <div class="fixed bottom-0 left-0 w-full bg-white/95 backdrop-blur-md border-t border-corporate-200 p-4 z-[60] shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.05)] md:relative md:bg-transparent md:backdrop-blur-none md:border-t md:p-0 md:mt-8 md:pt-6 md:shadow-none md:z-auto flex justify-end">
-                    <button onclick="startInterviewAndFullscreen();nextSection();" class="bg-corporate-primary hover:bg-corporate-primaryHover text-white font-semibold py-3 sm:py-4 px-6 sm:px-10 rounded-xl shadow-lg shadow-blue-500/20 transition-all transform hover:-translate-y-0.5 flex items-center justify-center w-full md:w-auto text-base sm:text-lg">
+                    <button onclick="startInterviewAndFullscreen();nextSection();" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 sm:py-4 px-6 sm:px-10 rounded-xl shadow-lg transition-all transform hover:-translate-y-0.5 flex items-center justify-center w-full md:w-auto text-base sm:text-lg">
                         Accept & Begin <i class="fa-solid fa-arrow-right ml-3"></i>
                     </button>
                 </div>`;
+
         } else if (section.type === 'review') {
             html += `
                 <div class="mb-6 sm:mb-8 pb-4 sm:pb-5 border-b border-corporate-200">
                     <h1 class="text-2xl sm:text-3xl font-extrabold text-corporate-900 tracking-tight">${section.title}</h1>
-                    <p class="text-corporate-500 mt-1 sm:mt-2 font-medium tracking-wide text-xs sm:text-sm uppercase text-corporate-primary">${section.subtitle}</p>
+                    <p class="text-corporate-500 mt-1 sm:mt-2 font-medium tracking-wide text-xs sm:text-sm uppercase text-blue-600">${section.subtitle}</p>
                 </div>
                 <div class="space-y-4 sm:space-y-6 fade-enter-delayed max-w-4xl mx-auto w-full mb-auto">
                     <div class="bg-indigo-50 border border-indigo-100 rounded-xl p-4 sm:p-5 flex items-start mb-4 sm:mb-6 shadow-sm">
-                        <i class="fa-solid fa-clipboard-check text-indigo-500 mt-0.5 mr-2 sm:mr-3 text-lg sm:text-xl"></i>
+                        <i class="fa-solid fa-clipboard-check text-indigo-500 mt-0.5 mr-3 text-lg"></i>
                         <div><p class="text-xs sm:text-sm text-indigo-800 font-bold mb-1">Final Submission Review</p><p class="text-[10px] sm:text-sm text-indigo-700 font-medium">Double-check all answers. Once submitted, your code expires.</p></div>
                     </div>`;
             formSections.forEach(s => {
@@ -706,10 +610,10 @@
                     html += `<div class="mb-6 sm:mb-8"><h3 class="font-extrabold text-corporate-800 mb-3 sm:mb-4 border-b border-corporate-200 pb-2 uppercase tracking-wide text-[10px] sm:text-sm">${s.title}</h3><div class="space-y-3 sm:space-y-4">`;
                     s.questions.forEach((qText, idx) => {
                         const qId = `${s.id}_q${idx}`;
-                        let ans = answers[qId] || '<span class="text-red-500 italic font-semibold">No response provided</span>';
+                        const ans = answers[qId] || '<span class="text-red-500 italic font-semibold">No response provided</span>';
                         html += `<div class="bg-white p-4 sm:p-5 rounded-xl border border-corporate-200 shadow-sm">
-                            <p class="text-xs sm:text-sm font-bold text-corporate-900 mb-2 sm:mb-3"><span class="text-corporate-400 mr-1">Q:</span> ${qText}</p>
-                            <p class="text-xs sm:text-sm text-corporate-700 whitespace-pre-wrap pl-3 sm:pl-4 border-l-2 border-corporate-primary leading-relaxed">${ans}</p>
+                            <p class="text-xs sm:text-sm font-bold text-corporate-900 mb-2"><span class="text-corporate-400 mr-1">Q:</span> ${qText}</p>
+                            <p class="text-xs sm:text-sm text-corporate-700 whitespace-pre-wrap pl-3 sm:pl-4 border-l-2 border-blue-600 leading-relaxed">${ans}</p>
                         </div>`;
                     });
                     html += `</div></div>`;
@@ -718,7 +622,7 @@
             html += `
                     <div class="mt-6 sm:mt-8 bg-slate-100 border border-slate-300 rounded-xl p-4 sm:p-5 shadow-inner">
                         <label class="flex items-start space-x-3 sm:space-x-4 cursor-pointer">
-                            <input type="checkbox" id="oath-checkbox" onchange="toggleFinalSubmit()" class="mt-0.5 sm:mt-1 w-4 h-4 sm:w-5 sm:h-5 rounded border-corporate-400 text-corporate-primary focus:ring-corporate-primary">
+                            <input type="checkbox" id="oath-checkbox" onchange="toggleFinalSubmit()" class="mt-0.5 sm:mt-1 w-4 h-4 sm:w-5 sm:h-5 rounded border-corporate-400 text-blue-600 focus:ring-blue-600">
                             <span class="text-xs sm:text-sm text-corporate-800 font-medium leading-relaxed">I, <strong class="text-corporate-900 border-b border-corporate-400 pb-0.5 px-1">${candidateData.roblox}</strong>, declare on my honor that all answers are my own.</span>
                         </label>
                     </div>
@@ -727,31 +631,31 @@
                     <button onclick="prevSection()" class="text-corporate-500 hover:text-corporate-900 hover:bg-corporate-100 font-semibold px-4 py-3 sm:px-6 sm:py-3.5 rounded-xl transition-colors flex items-center justify-center text-sm sm:text-lg w-1/3 md:w-auto bg-slate-100 md:bg-transparent border md:border-none border-slate-200">
                         <i class="fa-solid fa-arrow-left md:mr-2"></i> <span class="hidden md:inline">Make Changes</span>
                     </button>
-                    <button id="final-submit-btn" onclick="submitDossier()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 sm:py-4 px-4 sm:px-10 rounded-xl shadow-lg shadow-green-500/20 transition-all flex items-center justify-center text-sm sm:text-lg btn-disabled w-2/3 md:w-auto">
+                    <button id="final-submit-btn" onclick="submitDossier()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 sm:py-4 px-4 sm:px-10 rounded-xl shadow-lg transition-all flex items-center justify-center text-sm sm:text-lg btn-disabled w-2/3 md:w-auto">
                         Submit Exam <i class="fa-solid fa-satellite-dish ml-2 sm:ml-3"></i>
                     </button>
                 </div>`;
+
         } else {
             html += `
                 <div class="mb-6 sm:mb-10 pb-4 sm:pb-5 border-b border-corporate-200">
                     <h1 class="text-2xl sm:text-3xl font-extrabold text-corporate-900 tracking-tight">${section.title}</h1>
-                    <p class="text-corporate-500 mt-1 sm:mt-2 font-medium tracking-wide text-xs sm:text-sm uppercase text-corporate-primary">${section.subtitle}</p>
+                    <p class="text-corporate-500 mt-1 sm:mt-2 font-medium tracking-wide text-xs sm:text-sm uppercase text-blue-600">${section.subtitle}</p>
                 </div>
                 <div class="space-y-6 sm:space-y-8 fade-enter-delayed max-w-4xl mx-auto w-full">`;
             if (section.type === 'questions') {
                 section.questions.forEach((qText, idx) => {
                     const qId = `${section.id}_q${idx}`;
-                    html += `
-                        <div class="question-card p-4 sm:p-8" id="card-${qId}">
-                            <div class="flex items-start mb-4 sm:mb-5">
-                                <span class="inline-flex items-center justify-center w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-blue-100 text-blue-700 font-extrabold text-[10px] sm:text-sm mr-3 sm:mr-4 mt-0.5 flex-shrink-0">${idx + 1}</span>
-                                <label class="block text-sm sm:text-lg font-semibold text-corporate-900 leading-relaxed tracking-tight flex-grow select-none">${qText} <span class="text-red-500 ml-1">*</span></label>
-                            </div>
-                            <div class="ml-0 sm:ml-12 relative flex flex-col items-end">
-                                <textarea id="input-${qId}" onfocus="setTimeout(()=>this.scrollIntoView({behavior:'smooth',block:'center'}),300)" onpaste="preventCheat(event)" oncopy="preventCheat(event)" oncut="preventCheat(event)" oncontextmenu="preventCheat(event)" oninput="triggerAutoSave()" rows="4" class="input-field w-full rounded-xl px-4 py-3 sm:px-5 sm:py-4 text-corporate-900 text-sm sm:text-base focus:outline-none resize-y min-h-[100px]" placeholder="Type your detailed answer here...">${answers[qId] || ''}</textarea>
-                                <div id="error-${qId}" class="absolute -bottom-5 left-2 text-[10px] sm:text-sm font-medium text-red-500 hidden flex items-center"><i class="fa-solid fa-circle-exclamation mr-1 sm:mr-1.5"></i> Required.</div>
-                            </div>
-                        </div>`;
+                    html += `<div class="question-card p-4 sm:p-8" id="card-${qId}">
+                        <div class="flex items-start mb-4 sm:mb-5">
+                            <span class="inline-flex items-center justify-center w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-blue-100 text-blue-700 font-extrabold text-[10px] sm:text-sm mr-3 sm:mr-4 mt-0.5 flex-shrink-0">${idx+1}</span>
+                            <label class="block text-sm sm:text-lg font-semibold text-corporate-900 leading-relaxed tracking-tight flex-grow select-none">${qText} <span class="text-red-500 ml-1">*</span></label>
+                        </div>
+                        <div class="ml-0 sm:ml-12 relative flex flex-col items-end">
+                            <textarea id="input-${qId}" onfocus="setTimeout(()=>this.scrollIntoView({behavior:'smooth',block:'center'}),300)" onpaste="preventCheat(event)" oncopy="preventCheat(event)" oncut="preventCheat(event)" oncontextmenu="preventCheat(event)" oninput="triggerAutoSave()" rows="4" class="input-field w-full rounded-xl px-4 py-3 sm:px-5 sm:py-4 text-corporate-900 text-sm sm:text-base focus:outline-none resize-y min-h-[100px]" placeholder="Type your detailed answer here...">${answers[qId] || ''}</textarea>
+                            <div id="error-${qId}" class="absolute -bottom-5 left-2 text-[10px] sm:text-sm font-medium text-red-500 hidden flex items-center"><i class="fa-solid fa-circle-exclamation mr-1"></i> Required.</div>
+                        </div>
+                    </div>`;
                 });
             }
             html += `</div>
@@ -759,7 +663,7 @@
                     <button onclick="prevSection()" class="text-corporate-500 hover:text-corporate-900 hover:bg-corporate-100 font-semibold px-4 py-3 sm:px-6 sm:py-3.5 rounded-xl transition-colors flex items-center justify-center text-sm sm:text-lg w-1/3 md:w-auto bg-slate-100 md:bg-transparent border md:border-none border-slate-200">
                         <i class="fa-solid fa-arrow-left md:mr-2"></i> <span class="hidden md:inline">Return</span>
                     </button>
-                    <button onclick="nextSection()" class="bg-corporate-900 hover:bg-black text-white font-semibold py-3 sm:py-3.5 px-4 sm:px-10 rounded-xl shadow-lg shadow-slate-900/10 transition-all flex items-center justify-center text-sm sm:text-lg w-2/3 md:w-auto">
+                    <button onclick="nextSection()" class="bg-corporate-900 hover:bg-black text-white font-semibold py-3 sm:py-3.5 px-4 sm:px-10 rounded-xl shadow-lg transition-all flex items-center justify-center text-sm sm:text-lg w-2/3 md:w-auto">
                         Save & Continue <i class="fa-solid fa-arrow-right ml-2 sm:ml-3"></i>
                     </button>
                 </div>`;
@@ -770,9 +674,7 @@
         if (section.type === 'review') toggleFinalSubmit();
     }
 
-    // =========================================================================
-    // FLOW LOGIC
-    // =========================================================================
+    // ── FLOW ──────────────────────────────────────────────────────────────────
     function startInterviewAndFullscreen() {
         try {
             const el = document.documentElement;
@@ -797,7 +699,7 @@
     async function authenticateCode() {
         const inputEl = document.getElementById('access-code-input');
         let code = inputEl.value.trim().toUpperCase();
-        if (!code.startsWith("RIC-") || code.length < 8) { showAuthError("Invalid format. Must start with RIC-"); return; }
+        if (!code.startsWith("MP-") || code.length < 7) { showAuthError("Invalid format. Must start with MP-"); return; }
 
         const btn = document.getElementById('auth-btn');
         const origHtml = btn.innerHTML;
@@ -805,13 +707,12 @@
         btn.classList.add('opacity-70', 'cursor-not-allowed');
 
         try {
-            if (!window.firebaseDb || !window.firebaseDoc) throw new Error("Firebase not initialized.");
-            const docRef  = window.firebaseDoc(window.firebaseDb, "access_codes", code);
-            const dnap = await window.firebaseGetDoc(docRef);
-            if (!dnap.exists()) throw new Error("Code not found in the secure database.");
-            const data = dnap.data();
+            const docRef  = window.firebaseDoc(window.firebaseDb, "mp_access_codes", code);
+            const docSnap = await window.firebaseGetDoc(docRef);
+            if (!docSnap.exists()) throw new Error("Code not found in the secure database.");
+            const data = docSnap.data();
             if (data.status === 'completed') throw new Error("This code has already been used and is expired.");
-            if (data.status === 'revoked')   throw new Error("This code has been revoked. Contact the Academy Head.");
+            if (data.status === 'revoked')   throw new Error("This code has been revoked. Contact your Examiner.");
             if (data.roblox.toLowerCase() !== appState.robloxName.toLowerCase()) {
                 throw new Error(`This code was generated for: ${data.roblox}. You are logged in as ${appState.robloxName}.`);
             }
@@ -829,7 +730,7 @@
             });
 
             if (candidateData.questions.length === 0) throw new Error("No questions found for this code.");
-            const savedData = localStorage.getItem(`ric_autosave_${candidateData.discord}`);
+            const savedData = localStorage.getItem(`mp_autosave_${candidateData.discord}`);
             if (savedData) answers = JSON.parse(savedData);
             buildDynamicForm(candidateData.questions);
             currentSectionIndex = 1;
@@ -837,7 +738,7 @@
             startWatchdogSystem();
             sendLiveLog('info', 'Authentication successful. Viewing Clearance page.');
             if (savedData) setTimeout(() => showToast('Data successfully restored.', 'success'), 500);
-        } catch (error) {
+        } catch(error) {
             console.error(error);
             showAuthError(error.message || "Invalid or expired code.");
             btn.innerHTML = origHtml;
@@ -848,14 +749,10 @@
     function showAuthError(msg = "Invalid code.") {
         const err   = document.getElementById('auth-error');
         const input = document.getElementById('access-code-input');
-        if (err) {
-            err.innerHTML = `<i class="fa-solid fa-circle-exclamation mr-1.5"></i> ${msg}`;
-            err.classList.remove('hidden');
-        }
-        if (input) {
-            input.classList.add('border-red-400', 'bg-red-50/50');
-            input.style.boxShadow = '0 0 0 4px rgba(239,68,68,0.15)';
-        }
+        err.innerHTML = `<i class="fa-solid fa-circle-exclamation mr-1.5"></i> ${msg}`;
+        err.classList.remove('hidden');
+        input.classList.add('border-red-400', 'bg-red-50/50');
+        input.style.boxShadow = '0 0 0 4px rgba(239,68,68,0.15)';
     }
 
     function buildDynamicForm(questionIds) {
@@ -879,17 +776,13 @@
             const el   = document.getElementById(`input-${id}`);
             const err  = document.getElementById(`error-${id}`);
             const card = document.getElementById(`card-${id}`);
-            if (!el) return;
             const val  = el.value.trim();
             if (!val) {
-                isValid = false; 
-                if (err) err.classList.remove('hidden');
-                el.classList.add('border-red-400', 'bg-red-50/50');
-                el.style.boxShadow = '0 0 0 4px rgba(239,68,68,0.15)';
-                if (card) { card.classList.add('error-shake'); setTimeout(() => card.classList.remove('error-shake'), 400); }
+                isValid = false; err.classList.remove('hidden');
+                el.classList.add('border-red-400', 'bg-red-50/50'); el.style.boxShadow = '0 0 0 4px rgba(239,68,68,0.15)';
+                card.classList.add('error-shake'); setTimeout(() => card.classList.remove('error-shake'), 400);
             } else {
-                answers[id] = val; 
-                if (err) err.classList.add('hidden');
+                answers[id] = val; err.classList.add('hidden');
                 el.classList.remove('border-red-400', 'bg-red-50/50'); el.style.boxShadow = '';
             }
         };
@@ -903,7 +796,7 @@
         autosaveTimeout = setTimeout(() => {
             saveAnswersToObj();
             if (candidateData.discord) {
-                localStorage.setItem(`ric_autosave_${candidateData.discord}`, JSON.stringify(answers));
+                localStorage.setItem(`mp_autosave_${candidateData.discord}`, JSON.stringify(answers));
                 showToast('Draft Auto-Saved', 'success');
             }
         }, 1500);
@@ -911,7 +804,6 @@
 
     function saveAnswersToObj() {
         const section = formSections[currentSectionIndex];
-        if (!section) return;
         if (section.type === 'questions') {
             section.questions.forEach((_, i) => {
                 const qId = `${section.id}_q${i}`;
@@ -922,14 +814,15 @@
     }
 
     function prevSection() {
-        if (currentSectionIndex > 1) { saveAnswersToObj(); currentSectionIndex--; renderSection(); sendLiveLog('info', `Candidate returned to: ${formSections[currentSectionIndex].title}`); }
+        if (currentSectionIndex > 1) { saveAnswersToObj(); currentSectionIndex--; renderSection(); }
     }
 
     async function nextSection() {
         if (formSections[currentSectionIndex].type === 'profile_review' || validateCurrentSection()) {
             saveAnswersToObj();
-            if (candidateData.discord && currentSectionIndex > 0) localStorage.setItem(`ric_autosave_${candidateData.discord}`, JSON.stringify(answers));
-            if (currentSectionIndex < formSections.length - 1) { currentSectionIndex++; renderSection(); sendLiveLog('info', `Candidate moved to: ${formSections[currentSectionIndex].title}`); }
+            if (candidateData.discord && currentSectionIndex > 0)
+                localStorage.setItem(`mp_autosave_${candidateData.discord}`, JSON.stringify(answers));
+            if (currentSectionIndex < formSections.length - 1) { currentSectionIndex++; renderSection(); }
         }
     }
 
@@ -941,8 +834,7 @@
 
     async function submitDossier() {
         const loadingModal = document.getElementById('loading-modal');
-        const loadText     = document.getElementById('loading-text');
-        loadText.innerText = "Transmitting Official Exam to Secure Server...";
+        document.getElementById('loading-text').innerText = "Transmitting Exam to Secure Server...";
         loadingModal.classList.remove('hidden'); loadingModal.classList.add('flex');
 
         clearInterval(timerInterval);
@@ -967,17 +859,19 @@
         });
 
         try {
-            if (!window.firebaseAddDoc) throw new Error("Firebase not loaded.");
-            await window.firebaseAddDoc(window.firebaseCollection(window.firebaseDb, "final_submissions"), {
+            await window.firebaseAddDoc(window.firebaseCollection(window.firebaseDb, "mp_final_submissions"), {
                 discord: candidateData.discord, roblox: appState.robloxName, rbxId: appState.robloxId || 'N/A',
                 timeTaken: timeString, tabSwitches, qaList, timestamp: new Date().toISOString()
             });
             if (appState.currentAccessCode) {
-                await window.firebaseUpdateDoc(window.firebaseDoc(window.firebaseDb, "access_codes", appState.currentAccessCode), { status: 'completed', completedAt: new Date().toISOString() });
+                await window.firebaseUpdateDoc(
+                    window.firebaseDoc(window.firebaseDb, "mp_access_codes", appState.currentAccessCode),
+                    { status: 'completed', completedAt: new Date().toISOString() }
+                );
             }
             if (codeRevokeListener) { codeRevokeListener(); codeRevokeListener = null; }
             sendLiveLog('success', `✅ Exam SUBMITTED in ${timeString}.`);
-            localStorage.removeItem(`ric_autosave_${candidateData.discord}`);
+            localStorage.removeItem(`mp_autosave_${candidateData.discord}`);
             loadingModal.classList.add('hidden'); loadingModal.classList.remove('flex');
             document.getElementById('success-modal').classList.remove('hidden'); document.getElementById('success-modal').classList.add('flex');
         } catch(e) {
@@ -988,9 +882,6 @@
         }
     }
 
-    // =========================================================================
-    // BOOT
-    // =========================================================================
     window.onload = initApp;
     </script>
 </body>
