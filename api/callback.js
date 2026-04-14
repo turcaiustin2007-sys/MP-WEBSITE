@@ -101,6 +101,7 @@ export default async function handler(req, res) {
                     isHighCommand = true;
             }
         }
+    }
 
         console.log(`[MP callback] ${userData.preferred_username} | isEligible:${isEligible} isAdmin:${isAdmin} isHighCommand:${isHighCommand}`);
 
