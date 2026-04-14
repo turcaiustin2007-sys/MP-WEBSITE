@@ -1,21 +1,8 @@
-import jwt   from 'jsonwebtoken';
-import fs    from 'fs';
-import path  from 'path';
-import admin from 'firebase-admin';
+import jwt  from 'jsonwebtoken';
+import fs   from 'fs';
+import path from 'path';
 
 const JWT_SECRET = process.env.JWT_SECRET;
-
-if (!admin.apps.length) {
-    admin.initializeApp({
-        credential: admin.credential.cert({
-            projectId:   process.env.FIREBASE_PROJECT_ID,
-            clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-            privateKey: (process.env.FIREBASE_PRIVATE_KEY || '')
-            .replace(/\\n/g, '\n')
-            .replace(/^"|"$/g, ''),
-        }),
-    });
-}
 
 function parseCookie(header, name) {
     if (!header) return null;
@@ -23,35 +10,33 @@ function parseCookie(header, name) {
     return match ? decodeURIComponent(match[1]) : null;
 }
 
-export default async function handler(req, res) {
-    const token = parseCookie(req.headers.cookie, 'ocs_admin');
-    if (!token) return res.redirect('/');
+export default function handler(req, res) {
 
+    // ── 1. Cookie present? ────────────────────────────────────────────────────
+    const token = parseCookie(req.headers.cookie, 'mp_admin');
+    if (!token) {
+        console.warn('[MP admin] No cookie — redirect');
+        return res.redirect('/');
+    }
+
+    // ── 2. JWT valid? ─────────────────────────────────────────────────────────
     let payload;
     try {
-        payload = jwt.verify(token, JWT_SECRET, { issuer: 'ocs-portal' });
+        payload = jwt.verify(token, JWT_SECRET, { issuer: 'mp-portal' });
     } catch(err) {
-        res.setHeader('Set-Cookie', 'ocs_admin=; HttpOnly; Secure; SameSite=Lax; Max-Age=0; Path=/');
+        console.warn('[MP admin] Invalid JWT:', err.message);
+        res.setHeader('Set-Cookie', 'mp_admin=; HttpOnly; Secure; SameSite=Lax; Max-Age=0; Path=/');
         return res.redirect('/');
     }
 
-    if (!payload.isAdmin && !payload.isHighCommand && !payload.isDeveloper) {
-        res.setHeader('Set-Cookie', 'ocs_admin=; HttpOnly; Secure; SameSite=Lax; Max-Age=0; Path=/');
+    // ── 3. Has valid access? ──────────────────────────────────────────────────
+    if (!payload.isAdmin && !payload.isGuest) {
+        console.warn('[MP admin] No valid access:', payload.roblox);
+        res.setHeader('Set-Cookie', 'mp_admin=; HttpOnly; Secure; SameSite=Lax; Max-Age=0; Path=/');
         return res.redirect('/');
     }
 
-    let firebaseToken = null;
-    try {
-        const uid = String(payload.id || payload.roblox);
-        firebaseToken = await admin.auth().createCustomToken(uid, {
-            admin:       payload.isAdmin       || false,
-            highCommand: payload.isHighCommand || false,
-            developer:   payload.isDeveloper   || false,
-        });
-    } catch(err) {
-        console.error('[admin] Firebase custom token error:', err.message);
-    }
-
+    // ── 4. Serve HTML with injected payload ───────────────────────────────────
     try {
         const htmlPath = path.join(process.cwd(), '_admin_template.html');
         const html     = fs.readFileSync(htmlPath, 'utf8');
@@ -61,8 +46,9 @@ export default async function handler(req, res) {
             roblox:        payload.roblox,
             isAdmin:       payload.isAdmin       || false,
             isHighCommand: payload.isHighCommand || false,
-            isDeveloper:   payload.isDeveloper   || false,
-            firebaseToken: firebaseToken,
+            isGuest:       payload.isGuest       || false,
+            grantAccess:   payload.grantAccess   || null,
+            firebaseToken: payload.firebaseToken || null,
             exp:           payload.exp
         });
 
@@ -71,13 +57,14 @@ export default async function handler(req, res) {
             `window.__SERVER_PAYLOAD__ = ${safePayload};`
         );
 
-        res.setHeader('Content-Type',           'text/html; charset=utf-8');
-        res.setHeader('Cache-Control',          'no-store, no-cache, must-revalidate, private');
-        res.setHeader('X-Frame-Options',        'DENY');
+        res.setHeader('Content-Type', 'text/html; charset=utf-8');
+        res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+        res.setHeader('X-Frame-Options', 'DENY');
         res.setHeader('X-Content-Type-Options', 'nosniff');
         res.status(200).send(injected);
+
     } catch(e) {
-        console.error('[admin] Failed to read _admin_template.html:', e);
+        console.error('[MP admin] Failed to read _admin_template.html:', e);
         res.status(500).send('Internal Server Error');
     }
 }
